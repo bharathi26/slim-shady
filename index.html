@@ -1,7 +1,7 @@
 <html lang="en"><head>
 <meta charset="UTF-8">
 
-<title>Slim Shady)</title>
+<title>Slim Shady</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/rete-stage0-render-plugin@0.2.14/build/stage0-render-plugin.debug.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/rete-stage0-menu-plugin@0.3.7/build/stage0-menu-plugin.debug.css">
 <style>
@@ -98,7 +98,7 @@ class NumComponent extends Rete.Component {
   }
 
   builder(node) {
-    var out1 = new Rete.Output("num", "Number", numSocket);
+    var out1 = new Rete.Output("num", "resultRGB", numSocket);
 
     return node.addControl(new NumControl(this.editor, "num")).addOutput(out1);
   }
@@ -110,13 +110,14 @@ class NumComponent extends Rete.Component {
 
 class AddComponent extends Rete.Component {
   constructor() {
-    super("Add");
+    super("PxrCurvature");
   }
 
   builder(node) {
-    var inp1 = new Rete.Input("num1", "Number", numSocket, true);
-    var inp2 = new Rete.Input("num2", "Number2", numSocket, true);
-    var out = new Rete.Output("num", "Number", numSocket);
+    var inp1 = new Rete.Input("num1", "numSamples", numSocket, true);
+    var inp2 = new Rete.Input("num2", "maxDistance", numSocket, true);
+    var out = new Rete.Output("num", "resultRGB", numSocket);
+    var out1 = new Rete.Output("numl", "resultR", numSocket);
 
     inp1.addControl(new NumControl(this.editor, "num1"));
     inp2.addControl(new NumControl(this.editor, "num2"));
@@ -125,7 +126,8 @@ class AddComponent extends Rete.Component {
       .addInput(inp1)
       .addInput(inp2)
       .addControl(new NumControl(this.editor, "preview", true))
-      .addOutput(out);
+      .addOutput(out)
+      .addOutput(out1);
   }
 
   worker(node, inputs, outputs) {
