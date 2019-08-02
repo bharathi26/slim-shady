@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>Args Test:</h2>
+
+<button type="button" onclick="loadXMLDoc()">
+Test</button>
+
+<p>Inputs</p>
+<p id="inputs"></p>
+<p>Outputs</p>
+<p id="outputs"></p>
+
+<script>
+function loadXMLDoc() {
+	var xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == 4 && xhr.status == 200) {
+			parser = new DOMParser();
+			xmlDoc = parser.parseFromString(xhr.responseText, "text/xml");
+			params = xmlDoc.getElementsByTagName("param");
+			var param = "";
+			for (i = 0; i < params.length; i++) {
+				param += params[i].getAttribute("type") + " " + params[i].getAttribute("name") + " " + params[i].getAttribute("default") + "<br>";
+			}
+			document.getElementById("inputs").innerHTML = param;
+			
+			outputs = xmlDoc.getElementsByTagName("output")
+			var output = "";
+			for (i = 0; i < outputs.length; i++) {
+				var outputTagValue = "";
+				outputTags = outputs[i].getElementsByTagName("tag");
+				for (j = 0; j < outputTags.length; j++) {
+					outputTagValue += outputTags[j].getAttribute("value") + " ";
+				}
+				output += outputTagValue + outputs[i].getAttribute("name") + "<br>";
+			}
+			document.getElementById("outputs").innerHTML = output;
+		}
+	}
+	xhr.open('GET', "https://raw.githubusercontent.com/sttng/LDD/master/PxrCurvature.args");
+	xhr.send();
+}
+
+</script>
+
+</body>
+</html>
