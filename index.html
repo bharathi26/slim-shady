@@ -165,32 +165,48 @@ class PxrPatternComponent extends Rete.Component {
 	}
 
 	builder(node) {
-		var inp1 = new Rete.Input("num1", "int numSamples", numSocket, true);
-		var inp2 = new Rete.Input("num2", "maxDistance", numSocket, true);
-		var out = new Rete.Output("num", "color vector normal point resultRGB", numSocket);
-		var out1 = new Rete.Output("numl", "resultR", numSocket);
+	
+	var xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == 4 && xhr.status == 200) {
+			var parser = new DOMParser();
+			var xmlDoc = parser.parseFromString(xhr.responseText, "text/xml");
+			var params = xmlDoc.getElementsByTagName("param");
+			var i
+			for (i = 0; i < params.length; i++) {
+				var PatternInputs = new Rete.Input("PatternInput" + i, params[i].getAttribute("type") + " " + params[i].getAttribute("name"), numSocket, true);
+				PatternInputs.addControl(new NumControl(this.editor, "PatternInput" + i));
+				node.addInput(PatternInputs)
+			}
+			
+			var outputs = xmlDoc.getElementsByTagName("output");
+			for (i = 0; i < outputs.length; i++) {
+				var outputTagValue = "";
+				var outputTags = outputs[i].getElementsByTagName("tag");
+				var j
+				for (j = 0; j < outputTags.length; j++) {
+					outputTagValue += outputTags[j].getAttribute("value") + " ";
+				}
+				var PatternOutputs = new Rete.Output("PatternOutput" + i, outputTagValue + outputs[i].getAttribute("name"), numSocket);
+				node.addOutput(PatternOutputs)
+			}
+			
+		}
+	}
+	xhr.open('GET', "https://raw.githubusercontent.com/sttng/LDD/master/PxrCurvature.args");
+	xhr.send();
 
-		inp1.addControl(new NumControl(this.editor, "num1"));
+		var inp2 = new Rete.Input("num2", "ExmaxDistance", numSocket, true);
+
+
 		inp2.addControl(new NumControl(this.editor, "num2"));
 
 		return node
-			.addInput(inp1)
 			.addInput(inp2)
-			.addControl(new NumControl(this.editor, "preview", true))
-			.addOutput(out)
-			.addOutput(out1);
 	}
 
 	worker(node, inputs, outputs) {
-		var n1 = inputs["num1"].length ? inputs["num1"][0] : node.data.num1;
-		var n2 = inputs["num2"].length ? inputs["num2"][0] : node.data.num2;
-		var sum = n1 + n2;
-
-		this.editor.nodes
-			.find(n => n.id == node.id)
-			.controls.get("preview")
-			.setValue(sum);
-		outputs["num"] = sum;
+		outputs["num"] = node.data.num;
 	}
 }
 
