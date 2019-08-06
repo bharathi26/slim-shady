@@ -24,10 +24,24 @@ select, input {
   width: 170px;
 }
 
+.socket.number {
+  background: #1a2b3c
+}
+
+.socket.int {
+  background: #317eab
+}
+
+.socket.float {
+  background: #733C84
+}
+
 svg.connection { // dirty fix, path coordinates are incorrect with default 1px for some reason
   width: 12px;
   height: 12px;
 }
+
+
 </style>
 </head>
 <body>
@@ -43,7 +57,10 @@ svg.connection { // dirty fix, path coordinates are incorrect with default 1px f
 <script src="https://cdn.jsdelivr.net/npm/rete-area-plugin@0.1.5/build/area-plugin.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/rete-comment-plugin@0.2.0/build/comment-plugin.min.js"></script>
 <script id="rendered-js">
-var numSocket = new Rete.Socket("Number value");
+var numSocket = new Rete.Socket("Number");
+var colorSocket = new Rete.Socket("color");
+var floatSocket = new Rete.Socket("float");
+var intSocket = new Rete.Socket("int");
 
 var Stage0NumControl = {
 	template: '<input type="number"/>',
@@ -102,6 +119,7 @@ class PxrPatternComponent extends Rete.Component {
 		
 		var PxrParams
 		var PxrOutputs
+		var usedSocket = numSocket
 		
 		var xhr = new XMLHttpRequest();
 		xhr.onreadystatechange = function() {
@@ -118,7 +136,14 @@ class PxrPatternComponent extends Rete.Component {
 		//Input Nodes (Params in RenderMan)
 		var i
 		for (i = 0; i < PxrParams.length; i++) {
-			var PatternInputs = new Rete.Input(PxrParams[i].getAttribute("name"), PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), numSocket, true);
+			if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "float"){
+				usedSocket = floatSocket;
+			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "int") {
+				usedSocket = intSocket;
+			} else {
+				usedSocket = numSocket;
+			}
+			var PatternInputs = new Rete.Input(PxrParams[i].getAttribute("name"), PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
 			PatternInputs.addControl(new NumControl(this.editor, PxrParams[i].getAttribute("name")));
 			node.addInput(PatternInputs)
 		}
@@ -131,7 +156,16 @@ class PxrPatternComponent extends Rete.Component {
 				for (j = 0; j < outputTags.length; j++) {
 					outputTagValue += outputTags[j].getAttribute("value") + " ";
 			}
-			var PatternOutputs = new Rete.Output(PxrOutputs[i].getAttribute("name"), outputTagValue + PxrOutputs[i].getAttribute("name"), numSocket);
+			
+			if (outputTagValue.replace( /\s/g, '') == "float"){
+				usedSocket = floatSocket;
+			} else if (outputTagValue.replace( /\s/g, '') == "int") {
+				usedSocket = intSocket;
+			} else {
+				usedSocket = numSocket;
+			}
+			
+			var PatternOutputs = new Rete.Output(PxrOutputs[i].getAttribute("name"), outputTagValue + PxrOutputs[i].getAttribute("name"), usedSocket);
 			node.addOutput(PatternOutputs);
 		}
 	
