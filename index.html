@@ -5,6 +5,24 @@
 	<title>Rete.js Node Editor UE4 Style</title>
 	<link rel="stylesheet" href="./style.css">
 	<style>
+.node-editor .node .socket.number {
+	background: #2E88BC
+}
+.node-editor .node .socket.int {
+	background: #202020
+}
+.node-editor .node .socket.float {
+	background: #777777
+}
+.node-editor .node .socket.color {
+	background: #57BC2E
+}
+.node-editor .node .socket.string {
+	background: #FC9C2F
+}
+.node-editor .node .socket.struct {
+	background: #BC00AB
+}
 
 	</style>
 </head>
@@ -16,10 +34,11 @@
 	<div class="content">
 		<div class="col" v-if="node.controls.size&gt;0 || node.inputs.size&gt;0">
 			<div class="input" v-for="input in inputs()" :key="input.key" style="text-align: left">
-			<Socket v-socket:input="input" type="input" :socket="input.socket" :used="() => input.connections.length"></Socket>
-			<div class="input-title" v-show="!input.showControl()">{{input.name}}</div>
-			<div class="input-control" v-show="input.showControl()" v-control="input.control"></div>
-		</div>
+				<Socket v-socket:input="input" type="input" :socket="input.socket" :used="() => input.connections.length"></Socket>
+				<div class="input-title" v-show="input.showControl()">{{input.name}}</div>
+				<div class="input-title" v-show="!input.showControl()">{{input.name}}</div><br>
+				<div class="input-control" v-show="input.showControl()" v-control="input.control"></div>
+			</div>
 		<div class="control" v-for="control in controls()" v-control="control"></div>
 		</div>
 		<div class="col">

@@ -3,6 +3,8 @@ var numSocket = new Rete.Socket("Number");
 var colorSocket = new Rete.Socket("color");
 var floatSocket = new Rete.Socket("float");
 var intSocket = new Rete.Socket("int");
+var stringSocket = new Rete.Socket("string");
+var structSocket = new Rete.Socket("struct");
 
 numSocket.combineWith(colorSocket);
 numSocket.combineWith(floatSocket);
@@ -10,7 +12,7 @@ numSocket.combineWith(floatSocket);
 
 var VueNumControl = {
   props: ['readonly', 'emitter', 'ikey', 'getData', 'putData'],
-  template: '<input type="number" :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop=""/>',
+  template: '<input :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop=""/>',
   data() {
     return {
       value: 0,
@@ -104,6 +106,10 @@ class PxrPatternComponent extends Rete.Component {
 				usedSocket = intSocket;
 			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "color") {
 				usedSocket = colorSocket;
+			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "string") {
+				usedSocket = stringSocket;
+			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "struct") {
+				usedSocket = structSocket;
 			} else {
 				usedSocket = numSocket;
 			}
@@ -128,6 +134,10 @@ class PxrPatternComponent extends Rete.Component {
 				usedSocket = intSocket;
 			} else if (outputTagValue.replace( /\s/g, '') == "color") {
 				usedSocket = colorSocket;
+			} else if (outputTagValue.replace( /\s/g, '') == "string") {
+				usedSocket = stringSocket;
+			} else if (outputTagValue.replace( /\s/g, '') == "struct") {
+				usedSocket = structSocket;
 			} else {
 				usedSocket = numSocket;
 			}
@@ -235,8 +245,8 @@ class PxrPatternComponent extends Rete.Component {
 	PxrCurvature.data["collapsed"] = true;
 
 	PxrBlend.position = [800, 100];
-	PxrCurvature.position = [400, 100];
-	PxrDirt.position = [0, 200];
+	PxrCurvature.position = [300, 20];
+	PxrDirt.position = [200, 500];
 
 	editor.addNode(PxrBlend);
 	editor.addNode(PxrCurvature);
