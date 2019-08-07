@@ -1,4 +1,4 @@
-var template = document.querySelector('#customNode').innerHTML;
+var template = document.querySelector('#CustomPxrPatternNode').innerHTML;
 var numSocket = new Rete.Socket("Number");
 var colorSocket = new Rete.Socket("color");
 var floatSocket = new Rete.Socket("float");
@@ -49,33 +49,51 @@ class NumControl extends Rete.Control {
 }
 
 
-var CustomSocket = {
+var CustomPxrPatternSocket = {
   template: `<div class="socket"
     :class="[type, socket.name, used()?'used':''] | kebab"
     :title="socket.name+'\\n'+socket.hint"></div>`,
   props: ['type', 'socket', 'used']
 }
 
-
-var CustomNode = {
-  template,
-  mixins: [VueRenderPlugin.mixin],
-  methods:{
-    used(io){
-      return io.connections.length;
-    }
-  },
-  components: {
-    Socket: /*VueRenderPlugin.Socket*/CustomSocket
-  }
+var CustomPxrSurfaceMaterialSocket = {
+  template: `<div class="socket"
+    :class="[type, socket.name, used()?'used':''] | kebab"
+    :title="socket.name+'blaa\\n'+socket.hint"></div>`,
+  props: ['type', 'socket', 'used']
 }
 
+var CustomPxrPatternNode = {
+	template,
+	mixins: [VueRenderPlugin.mixin],
+	methods:{
+		used(io){
+			return io.connections.length;
+		}
+	},
+	components: {
+		Socket: /*VueRenderPlugin.Socket*/CustomPxrPatternSocket
+	}
+}
+
+var CustomPxrSurfaceMaterialNode = {
+	template,
+	mixins: [VueRenderPlugin.mixin],
+	methods:{
+		used(io){
+			return io.connections.length;
+		}
+	},
+	components: {
+		Socket: /*VueRenderPlugin.Socket*/CustomPxrSurfaceMaterialSocket
+	}
+}
 
 class PxrPatternComponent extends Rete.Component {
 	constructor(PxrPattern) {
 		super(PxrPattern);
 		this.text = PxrPattern; //PxrCurvature
-		this.data.component = CustomNode;
+		this.data.component = CustomPxrPatternNode;
 	}
 
 	builder(node) {
@@ -155,6 +173,63 @@ class PxrPatternComponent extends Rete.Component {
 }
 
 
+class PxrSurfaceMaterialComponent extends Rete.Component {
+	constructor(PxrPattern) {
+		super(PxrPattern);
+		this.text = PxrPattern; //PxrCurvature
+		this.data.component = CustomPxrSurfaceMaterialNode;
+	}
+
+	builder(node) {
+		
+		var PxrParams
+		var PxrOutputs
+		var usedSocket = numSocket
+		
+		var xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState == 4 && xhr.status == 200) {
+				var parser = new DOMParser();
+				var xmlDoc = parser.parseFromString(xhr.responseText, "text/xml");
+				PxrParams = xmlDoc.getElementsByTagName("param");
+				PxrOutputs = xmlDoc.getElementsByTagName("output");
+			}
+		}
+		xhr.open('GET', "https://raw.githubusercontent.com/sttng/LDD/master/args/" + this.text + ".args", false);
+		xhr.send();
+
+		//Input Nodes (Params in RenderMan)
+		var i
+		for (i = 0; i < PxrParams.length; i++) {
+			
+			if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "float"){
+				usedSocket = floatSocket;
+			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "int") {
+				usedSocket = intSocket;
+			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "color") {
+				usedSocket = colorSocket;
+			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "string") {
+				usedSocket = stringSocket;
+			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "struct") {
+				usedSocket = structSocket;
+			} else {
+				usedSocket = numSocket;
+			}
+			
+			var PatternInputs = new Rete.Input(PxrParams[i].getAttribute("name"), PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
+			PatternInputs.addControl(new NumControl(this.editor, PxrParams[i].getAttribute("name")));
+			node.addInput(PatternInputs)
+		}
+	
+		return node
+	}
+
+	worker(node, inputs, outputs) {
+		outputs["num"] = node.data.num;
+	}
+}
+
+
 (async () => {
 	var container = document.querySelector('#rete');
 
@@ -220,10 +295,16 @@ class PxrPatternComponent extends Rete.Component {
 "PxrWireframe",
 "PxrWorley"];
 
+	var PxrSurfaceMaterialsList = ["PxrSurface", "PxrLayerSurface", "PxrLayer", "PxrLayerMixer"]
+
 	var components =[]
 
 	for (i = 0; i < PxrPatternsList.length; i++){
-		components[i] = new PxrPatternComponent(PxrPatternsList[i])
+		components.push(new PxrPatternComponent(PxrPatternsList[i]))
+	}
+	
+	for (i = 0; i < PxrSurfaceMaterialsList.length; i++){
+		components.push(new PxrSurfaceMaterialComponent(PxrSurfaceMaterialsList[i]))
 	}
 
     var editor = new Rete.NodeEditor('demo@0.1.0', container);
