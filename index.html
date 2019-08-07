@@ -1,269 +1,46 @@
-<html lang="en"><head>
-<meta charset="UTF-8">
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+	<meta charset="UTF-8">
+	<title>Rete.js Node Editor UE4 Style</title>
+	<link rel="stylesheet" href="./style.css">
+	<style>
 
-<title>Slim Shady</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/rete-stage0-render-plugin@0.2.14/build/stage0-render-plugin.debug.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/rete-stage0-menu-plugin@0.3.7/build/stage0-menu-plugin.debug.css">
-<style>
-html, body {
-  height: 100%;
-  height: 100%;
-  margin: 0;
-}
-
-.node .control input, .node .input-control input {
-  width: 140px;
-}
-select, input {
-  width: 100%;
-  border-radius: 30px;
-  background-color: white;
-  padding: 2px 6px;
-  border: 1px solid #999;
-  font-size: 110%;
-  width: 170px;
-}
-
-.socket.number {
-  background: #1a2b3c
-}
-
-.socket.int {
-  background: #317eab
-}
-
-.socket.float {
-  background: #733C84
-}
-
-svg.connection { // dirty fix, path coordinates are incorrect with default 1px for some reason
-  width: 12px;
-  height: 12px;
-}
-
-
-</style>
+	</style>
 </head>
 <body>
-<div id="rete">
 
-<script src="https://unpkg.com/stage0@0.0.15/dist/keyed.min.js"></script>
-<script src="https://unpkg.com/stage0@0.0.15/dist/index.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/rete@1.0.0-beta.5/build/rete.debug.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/rete-stage0-render-plugin@0.2.14/build/stage0-render-plugin.debug.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/rete-stage0-menu-plugin@0.3.7/build/stage0-menu-plugin.debug.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/rete-connection-plugin@0.3.1/build/connection-plugin.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/rete-area-plugin@0.1.5/build/area-plugin.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/rete-comment-plugin@0.2.0/build/comment-plugin.min.js"></script>
-<script id="rendered-js">
-var numSocket = new Rete.Socket("Number");
-var colorSocket = new Rete.Socket("color");
-var floatSocket = new Rete.Socket("float");
-var intSocket = new Rete.Socket("int");
+<template id="customNode">
+	<div class="node" :class="[selected(), node.name] | kebab">
+	<div class="title">{{node.name}}</div>
+	<div class="content">
+		<div class="col" v-if="node.controls.size&gt;0 || node.inputs.size&gt;0">
+			<div class="input" v-for="input in inputs()" :key="input.key" style="text-align: left">
+			<Socket v-socket:input="input" type="input" :socket="input.socket" :used="() => input.connections.length"></Socket>
+			<div class="input-title" v-show="!input.showControl()">{{input.name}}</div>
+			<div class="input-control" v-show="input.showControl()" v-control="input.control"></div>
+		</div>
+		<div class="control" v-for="control in controls()" v-control="control"></div>
+		</div>
+		<div class="col">
+			<div class="output" v-for="output in outputs()" :key="output.key">
+				<div class="output-title">{{output.name}}</div>
+				<Socket v-socket:output="output" type="output" :socket="output.socket" :used="() => output.connections.length"></Socket>
+			</div>
+		</div>
+	</div> 
+</div>
+</template>
 
-var Stage0NumControl = {
-	template: '<input type="number"/>',
-	data() {
-		return {
-			value: 0
-		};
-	},
-	methods: {
-		update() {
-			if (this.root) {
-			this.putData(this.ikey, +this.root.value);
-			}
+<div id="rete" class="node-editor"></div>
 
-			this.emitter.trigger("process");
-		}
-	},
-	mounted() {
-		const _self = this;
+<script src='https://cdn.jsdelivr.net/npm/rete@1.4.1-rc.1/build/rete.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/alight@0.14.1/alight.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/rete-connection-plugin@0.8.2-rc.1/build/connection-plugin.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/rete-context-menu-plugin@0.1.4/build/context-menu-plugin.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/rete-vue-render-plugin@0.2.6/build/vue-render-plugin.min.js'></script>
+<script  src="./script.js"></script>
 
-		this.root.value = this.getData(this.ikey);
-
-		this.root.onkeyup = function(e) {
-			_self.root.update();
-		};
-
-		this.root.onmouseup = function(e) {
-			_self.root.update();
-		};
-
-		this.root.ondblclick = function(e) {
-			e.stopPropagation();
-		};
-	}
-};
-
-class NumControl extends Rete.Control {
-	constructor(emitter, key, readonly) {
-		super(key);
-		this.component = Stage0NumControl;
-		this.props = { emitter, ikey: key, readonly };
-	}
-
-	setValue(val) {
-		this.stage0Context.root.value = val; // TODO get rid of stage0Context
-	}
-}
-
-class PxrPatternComponent extends Rete.Component {
-	constructor(PxrPattern) {
-		super(PxrPattern);
-		this.text = PxrPattern; //PxrCurvature
-	}
-
-	builder(node) {
-		
-		var PxrParams
-		var PxrOutputs
-		var usedSocket = numSocket
-		
-		var xhr = new XMLHttpRequest();
-		xhr.onreadystatechange = function() {
-			if (xhr.readyState == 4 && xhr.status == 200) {
-				var parser = new DOMParser();
-				var xmlDoc = parser.parseFromString(xhr.responseText, "text/xml");
-				PxrParams = xmlDoc.getElementsByTagName("param");
-				PxrOutputs = xmlDoc.getElementsByTagName("output");
-			}
-		}
-		xhr.open('GET', "https://raw.githubusercontent.com/sttng/LDD/master/args/" + this.text + ".args", false);
-		xhr.send();
-
-		//Input Nodes (Params in RenderMan)
-		var i
-		for (i = 0; i < PxrParams.length; i++) {
-			if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "float"){
-				usedSocket = floatSocket;
-			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "int") {
-				usedSocket = intSocket;
-			} else {
-				usedSocket = numSocket;
-			}
-			var PatternInputs = new Rete.Input(PxrParams[i].getAttribute("name"), PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
-			PatternInputs.addControl(new NumControl(this.editor, PxrParams[i].getAttribute("name")));
-			node.addInput(PatternInputs)
-		}
-		
-		//Output Nodes
-		for (i = 0; i < PxrOutputs.length; i++) {
-			var outputTagValue = "";
-			var outputTags = PxrOutputs[i].getElementsByTagName("tag");
-				var j
-				for (j = 0; j < outputTags.length; j++) {
-					outputTagValue += outputTags[j].getAttribute("value") + " ";
-			}
-			
-			if (outputTagValue.replace( /\s/g, '') == "float"){
-				usedSocket = floatSocket;
-			} else if (outputTagValue.replace( /\s/g, '') == "int") {
-				usedSocket = intSocket;
-			} else {
-				usedSocket = numSocket;
-			}
-			
-			var PatternOutputs = new Rete.Output(PxrOutputs[i].getAttribute("name"), outputTagValue + PxrOutputs[i].getAttribute("name"), usedSocket);
-			node.addOutput(PatternOutputs);
-		}
-	
-		return node
-	}
-
-	worker(node, inputs, outputs) {
-		outputs["num"] = node.data.num;
-	}
-}
-
-
-(async () => {
-	var container = document.querySelector("#rete");
-	var components = [new PxrPatternComponent("PxrBlend"), new PxrPatternComponent("PxrCurvature"), new PxrPatternComponent("PxrDirt")];
-	var editor = new Rete.NodeEditor("demo@0.1.0", container);
-	editor.use(ConnectionPlugin);
-	editor.use(Stage0RenderPlugin);
-	editor.use(Stage0MenuPlugin, {
-		menuOptions: {
-			delay: 100,
-			allocate(component) {
-			if (component.name == "Add") {
-				return false;
-			}
-        return ["Menu", "PxrPattern"];
-      },
-      docked: true,
-      items: {
-        Menu: {
-          "Add component": {
-            Add: components[1]
-          },
-          Fn: () => {
-            alert("Fn");
-          }
-        }
-      }
-    },
-    dockedMenuOptions: {
-      delay: 100,
-      allocate(component) {
-        return false;
-      },
-      docked: true,
-      items: {
-        Menu: {
-          "Add component": {
-            Add: components[1]
-          },
-          "Add component 2": {
-            X: components[1]
-          }
-        }
-      }
-    }
-  });
-	editor.use(AreaPlugin);
-	editor.use(CommentPlugin);
-
-	var engine = new Rete.Engine("demo@0.1.0");
-
-	components.map(c => {
-		editor.register(c);
-		engine.register(c);
-	});
-
-
-	var PxrBlend = await components[0].createNode({ operation: 5 });
-	var PxrCurvature = await components[1].createNode({ numSamples: 4 });
-	var PxrDirt = await components[2].createNode({ numSamples: 4 });
-
-	PxrCurvature.data["collapsed"] = true;
-
-	PxrBlend.position = [800, 100];
-	PxrCurvature.position = [400, 100];
-	PxrDirt.position = [0, 200];
-
-	editor.addNode(PxrBlend);
-	editor.addNode(PxrCurvature);
-	editor.addNode(PxrDirt);
-
-	editor.connect(PxrCurvature.outputs.get("resultRGB"), PxrBlend.inputs.get("topRGB"));
-	editor.connect(PxrDirt.outputs.get("resultRGB"), PxrBlend.inputs.get("bottomRGB"));
-
-	editor.on(
-		"process nodecreated noderemoved connectioncreated connectionremoved",
-		async () => {
-			console.log("process");
-			await engine.abort();
-			await engine.process(editor.toJSON());
-		}
-	);
-
-	editor.view.resize();
-	AreaPlugin.zoomAt(editor);
-	editor.trigger("process");
-})();
-</script>
-
-</body></html>
+</body>
+</html>
