@@ -1,13 +1,20 @@
 var template = document.querySelector('#CustomPxrPatternNode').innerHTML;
-var numSocket = new Rete.Socket("Number");
+
 var colorSocket = new Rete.Socket("color");
-var floatSocket = new Rete.Socket("float");
 var intSocket = new Rete.Socket("int");
+var floatSocket = new Rete.Socket("float");
+var normalSocket = new Rete.Socket("normal");
+var pointSocket = new Rete.Socket("point");
 var stringSocket = new Rete.Socket("string");
 var structSocket = new Rete.Socket("struct");
+var vectorSocket = new Rete.Socket("vector");
+
+var numSocket = new Rete.Socket("Number");
 
 numSocket.combineWith(colorSocket);
-numSocket.combineWith(floatSocket);
+numSocket.combineWith(normalSocket);
+numSocket.combineWith(pointSocket);
+numSocket.combineWith(vectorSocket);
 
 
 var VueNumControl = {
@@ -118,21 +125,36 @@ class PxrPatternComponent extends Rete.Component {
 		var i
 		for (i = 0; i < PxrParams.length; i++) {
 			
-			if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "float"){
-				usedSocket = floatSocket;
-			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "int") {
-				usedSocket = intSocket;
-			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "color") {
-				usedSocket = colorSocket;
-			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "string") {
-				usedSocket = stringSocket;
-			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "struct") {
-				usedSocket = structSocket;
-			} else {
-				usedSocket = numSocket;
+			switch (PxrParams[i].getAttribute("type").replace( /\s/g, '')) {
+				case "color":
+					usedSocket = colorSocket;
+					break;
+				case "float":
+					usedSocket = floatSocket;
+					break;
+				case "int":
+					usedSocket = intSocket;
+					break;
+				case "normal":
+					usedSocket = normalSocket;
+					break;
+				case "point":
+					usedSocket = pointSocket;
+					break;
+				case "string":
+					usedSocket = stringSocket;
+					break;
+				case "struct":
+					usedSocket = structSocket;
+					break;
+				case "vector":
+					usedSocket = vectorSocket;
+					break;
+				default:
+					usedSocket = numSocket;
 			}
 			
-			var PatternInputs = new Rete.Input(PxrParams[i].getAttribute("name"), PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
+			var PatternInputs = new Rete.Input(PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
 			PatternInputs.addControl(new NumControl(this.editor, PxrParams[i].getAttribute("name")));
 			node.addInput(PatternInputs)
 		}
@@ -146,18 +168,24 @@ class PxrPatternComponent extends Rete.Component {
 					outputTagValue += outputTags[j].getAttribute("value") + " ";
 			}
 			
-			if (outputTagValue.replace( /\s/g, '') == "float"){
-				usedSocket = floatSocket;
-			} else if (outputTagValue.replace( /\s/g, '') == "int") {
-				usedSocket = intSocket;
-			} else if (outputTagValue.replace( /\s/g, '') == "color") {
-				usedSocket = colorSocket;
-			} else if (outputTagValue.replace( /\s/g, '') == "string") {
-				usedSocket = stringSocket;
-			} else if (outputTagValue.replace( /\s/g, '') == "struct") {
-				usedSocket = structSocket;
-			} else {
-				usedSocket = numSocket;
+			switch (outputTagValue.replace( /\s/g, '')) {
+				case "float":
+					usedSocket = floatSocket;
+					break;
+				case "int":
+					usedSocket = intSocket;
+					break;
+				case "color":
+					usedSocket = colorSocket;
+					break;
+				case "string":
+					usedSocket = stringSocket;
+					break;
+				case "struct":
+					usedSocket = structSocket;
+					break;
+				default:
+					usedSocket = numSocket;
 			}
 			
 			var PatternOutputs = new Rete.Output(PxrOutputs[i].getAttribute("name"), outputTagValue + PxrOutputs[i].getAttribute("name"), usedSocket);
@@ -216,7 +244,7 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 				usedSocket = numSocket;
 			}
 			
-			var PatternInputs = new Rete.Input(PxrParams[i].getAttribute("name"), PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
+			var PatternInputs = new Rete.Input(PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
 			PatternInputs.addControl(new NumControl(this.editor, PxrParams[i].getAttribute("name")));
 			node.addInput(PatternInputs)
 		}
@@ -310,7 +338,24 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
     var editor = new Rete.NodeEditor('demo@0.1.0', container);
     editor.use(ConnectionPlugin.default);
     editor.use(VueRenderPlugin);
-    editor.use(ContextMenuPlugin);
+	editor.use(ConnectionPathPlugin, { arrow: false });
+    editor.use(ContextMenuPlugin, {
+    searchBar: true, // true by default
+    searchKeep: title => true, // leave item when searching, optional. For example, title => ['Refresh'].includes(title)
+    delay: 500,
+    allocate(component) {
+        return ['Submenu'];
+    },
+    rename(component) {
+        return component.name;
+    },
+    items: {
+        'Click me'(){ console.log('Works!') }
+    },
+    nodeItems: {
+        'Click me'(){ console.log('Works for node!') }
+    }
+});
 
     var engine = new Rete.Engine('demo@0.1.0');
     
@@ -318,7 +363,26 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
         editor.register(c);
         engine.register(c);
     });
+	
+	document.getElementById("savebtn").onclick = async ()=> {
+	console.log(editor.toJSON());
+	data = editor.toJSON()
+	//document.getElementById("outputs").innerHTML = JSON.stringify(editor.toJSON(), null, "\t");
+		for (i in data.nodes) {
+			
+			var out = `Pattern "` + data.nodes[i].name + `" "` + data.nodes[i].name + i +`"`
+			var out2 = JSON.stringify(data.nodes[i].inputs)
+			var keys = Object.keys(data.nodes[i].inputs);
+			console.log(out + "\n" + keys[0]);
+		}
 
+	};
+
+	document.getElementById("loadbtn").onclick = async ()=> {
+	var data = JSON.parse(document.getElementById("outputs").innerHTML)
+	await editor.fromJSON(data);
+	};
+	
 	var PxrBlend = await components[7].createNode({ operation: 5 });
 	var PxrCurvature = await components[14].createNode({ numSamples: 4 });
 	var PxrDirt = await components[15].createNode({ numSamples: 4 });
@@ -327,20 +391,21 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 
 	PxrBlend.position = [800, 100];
 	PxrCurvature.position = [300, 20];
-	PxrDirt.position = [200, 500];
+	PxrDirt.position = [200, 520];
 
 	editor.addNode(PxrBlend);
 	editor.addNode(PxrCurvature);
 	editor.addNode(PxrDirt);
 
-	editor.connect(PxrCurvature.outputs.get("resultRGB"), PxrBlend.inputs.get("topRGB"));
-	editor.connect(PxrDirt.outputs.get("resultRGB"), PxrBlend.inputs.get("bottomRGB"));
+	editor.connect(PxrCurvature.outputs.get("resultRGB"), PxrBlend.inputs.get("color topRGB"));
+	editor.connect(PxrDirt.outputs.get("resultG"), PxrBlend.inputs.get("float bottomA"));
 
 
-    editor.on('process nodecreated noderemoved connectioncreated connectionremoved', async () => {
-        await engine.abort();
-        await engine.process(editor.toJSON());
-    });
+	editor.on('process nodecreated noderemoved connectioncreated connectionremoved', async () => {
+		console.log('process');
+		await engine.abort();
+		await engine.process(editor.toJSON());
+	});
 
     editor.view.resize();
     editor.trigger('process');

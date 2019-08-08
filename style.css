@@ -128,11 +128,11 @@ html, body {
   stroke: #aaa;
 }
 .node-editor .node select, .node-editor .node input {
-  width: 75px;
+  width: 65px;
   background-color: transparent;
-  padding: 2px 4px;
+  padding: 0px 5px;
   border: 1px solid #fff;
-  margin-left: 15px;
+  margin-left: 18px;
   font-size: 11px;
   color: #fff;
   border-radius: 10px;
@@ -170,12 +170,12 @@ html, body {
   top: 5px;
 }
 .context-menu .item {
-  padding: 4px;
+  padding: 2px;
   border-bottom: 1px solid rgba(15, 15, 15, 0.7);
   color: #fff;
   background-color: rgba(35, 35, 35, 0.7);
   cursor: pointer;
-  width: 100px;
+  width: 150px;
   position: relative;
   font-family: sans-serif;
   font-size: 10px;
