@@ -155,7 +155,7 @@ class PxrPatternComponent extends Rete.Component {
 			}
 			
 			var PatternInputs = new Rete.Input(PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
-			PatternInputs.addControl(new NumControl(this.editor, PxrParams[i].getAttribute("name")));
+			PatternInputs.addControl(new NumControl(this.editor, PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name")));
 			node.addInput(PatternInputs)
 		}
 		
@@ -245,7 +245,7 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 			}
 			
 			var PatternInputs = new Rete.Input(PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
-			PatternInputs.addControl(new NumControl(this.editor, PxrParams[i].getAttribute("name")));
+			PatternInputs.addControl(new NumControl(this.editor, PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name")));
 			node.addInput(PatternInputs)
 		}
 	
@@ -366,14 +366,32 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 	
 	document.getElementById("savebtn").onclick = async ()=> {
 	console.log(editor.toJSON());
-	data = editor.toJSON()
+	editorJSON = editor.toJSON()
 	//document.getElementById("outputs").innerHTML = JSON.stringify(editor.toJSON(), null, "\t");
-		for (i in data.nodes) {
+		for (i in editorJSON.nodes) {
 			
-			var out = `Pattern "` + data.nodes[i].name + `" "` + data.nodes[i].name + i +`"`
-			var out2 = JSON.stringify(data.nodes[i].inputs)
-			var keys = Object.keys(data.nodes[i].inputs);
-			console.log(out + "\n" + keys[0]);
+			var out = "Pattern \"" + editorJSON.nodes[i].name + "\" \"" + editorJSON.nodes[i].name + editorJSON.nodes[i].id + "\""
+			var out2 = JSON.stringify(editorJSON.nodes[i].inputs)
+			console.log(out);
+			//var keys = Object.keys(editorJSON.nodes[i].inputs);
+			//for ( var j in Object.keys(editorJSON.nodes[i].inputs)) {
+			//	console.log("\t\"" + keys[j] + "\" [" + editorJSON.nodes[i].data[keys[j]] + "]");
+			//}
+			//console.log("\n");
+			var keys = Object.keys(editorJSON.nodes[i].data);
+			for ( var j in Object.keys(editorJSON.nodes[i].data)) {
+				console.log("\t\"" + keys[j] + "\" [" + editorJSON.nodes[i].data[keys[j]] + "]");
+			}
+			
+			var mkeys = Object.keys(editorJSON.nodes[i].inputs);
+			for ( var j in Object.keys(editorJSON.nodes[i].inputs)) {
+				var conn = editorJSON.nodes[i].inputs[mkeys[j]].connections[0]
+				
+				if (conn) {
+				console.log("\t\"reference " + mkeys[j] + "\" [\"" + editorJSON.nodes[conn.node].name + conn.node + ":" + conn.output +"\"]");
+				}
+			}
+		console.log("\n")
 		}
 
 	};
@@ -383,11 +401,11 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 	await editor.fromJSON(data);
 	};
 	
-	var PxrBlend = await components[7].createNode({ operation: 5 });
-	var PxrCurvature = await components[14].createNode({ numSamples: 4 });
-	var PxrDirt = await components[15].createNode({ numSamples: 4 });
+	var PxrBlend = await components[7].createNode({ "int operation": 5 });
+	var PxrCurvature = await components[14].createNode({ "int numSamples": 4 });
+	var PxrDirt = await components[15].createNode({ "int numSamples": 4 });
 
-	PxrCurvature.data["collapsed"] = true;
+	//PxrCurvature.data["collapsed"] = true;
 
 	PxrBlend.position = [800, 100];
 	PxrCurvature.position = [300, 20];
