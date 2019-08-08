@@ -366,33 +366,45 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 	
 	document.getElementById("savebtn").onclick = async ()=> {
 	console.log(editor.toJSON());
-	editorJSON = editor.toJSON()
+	editorJSON = editor.toJSON();
+	var outputRib = ''
 	//document.getElementById("outputs").innerHTML = JSON.stringify(editor.toJSON(), null, "\t");
 		for (i in editorJSON.nodes) {
 			
-			var out = "Pattern \"" + editorJSON.nodes[i].name + "\" \"" + editorJSON.nodes[i].name + editorJSON.nodes[i].id + "\""
+			var PatternString = "Pattern \"" + editorJSON.nodes[i].name + "\" \"" + editorJSON.nodes[i].name + editorJSON.nodes[i].id + "\"\n"
 			var out2 = JSON.stringify(editorJSON.nodes[i].inputs)
-			console.log(out);
+			//console.log(out);
 			//var keys = Object.keys(editorJSON.nodes[i].inputs);
 			//for ( var j in Object.keys(editorJSON.nodes[i].inputs)) {
 			//	console.log("\t\"" + keys[j] + "\" [" + editorJSON.nodes[i].data[keys[j]] + "]");
 			//}
 			//console.log("\n");
 			var keys = Object.keys(editorJSON.nodes[i].data);
+			var dataNodes = ''
 			for ( var j in Object.keys(editorJSON.nodes[i].data)) {
-				console.log("\t\"" + keys[j] + "\" [" + editorJSON.nodes[i].data[keys[j]] + "]");
+				//console.log("\t\"" + keys[j] + "\" [" + editorJSON.nodes[i].data[keys[j]] + "]");
+				dataNodes = dataNodes + "\t\"" + keys[j] + "\" [" + editorJSON.nodes[i].data[keys[j]] + "]\n"
 			}
 			
 			var mkeys = Object.keys(editorJSON.nodes[i].inputs);
+			
+			connString = ''
 			for ( var j in Object.keys(editorJSON.nodes[i].inputs)) {
 				var conn = editorJSON.nodes[i].inputs[mkeys[j]].connections[0]
 				
 				if (conn) {
-				console.log("\t\"reference " + mkeys[j] + "\" [\"" + editorJSON.nodes[conn.node].name + conn.node + ":" + conn.output +"\"]");
+				connString = connString + "\t\"reference " + mkeys[j] + "\" [\"" + editorJSON.nodes[conn.node].name + conn.node + ":" + conn.output +"\"]\n"
+				//console.log("\t\"reference " + mkeys[j] + "\" [\"" + editorJSON.nodes[conn.node].name + conn.node + ":" + conn.output +"\"]");
 				}
 			}
+			
+			outputRib = outputRib + PatternString + dataNodes + connString
+			
 		console.log("\n")
+		outputRib = outputRib + "\n"
 		}
+	
+	document.getElementById("outputs").innerHTML = outputRib;
 
 	};
 
