@@ -576,9 +576,9 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 	PxrColorCorrect.position = [610, 45];
 	PxrInvert.position = [950, 50];
 	PxrToFloat.position = [1300, 200];
-	PxrLayer1.position = [640, 730];
-	PxrLayerMixer.position = [1210, 360];
-	PxrLayerSurface.position = [1630, 100];
+	PxrLayer1.position = [630, 700];
+	PxrLayerMixer.position = [1540, 270];
+	PxrLayerSurface.position = [1990, 70];
 	
 	editor.addNode(PxrWireframe);
 	editor.addNode(PxrWireLayer);
