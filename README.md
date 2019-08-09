@@ -1,5 +1,5 @@
 # Slim Shady for RenderMan
-A web-based material node editor for RenderMan.
+A web-based material node editor for RenderMan. It is based on Rete.js (https://github.com/retejs/rete)
 
 ![Slim Shady](https://raw.githubusercontent.com/sttng/slim-shady/master/slim_shady.png)
 
@@ -12,3 +12,7 @@ A web-based material node editor for RenderMan.
 
 * Internet connection
 * Tested on Chrome 75.0.3770.100
+
+## License
+
+MIT (https://opensource.org/licenses/MIT)
