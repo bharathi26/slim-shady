@@ -8,7 +8,7 @@ A web base material node editor for RenderMan.
 * Upper left button to export rib text file
 * Right click mouse button to open menu for adding further nodes
 
-## Requirments
+## Requirements
 
 * Internet connection
 * Tested on Chrome 75.0.3770.100
