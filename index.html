@@ -60,12 +60,11 @@
 </div>
 </template>
 
-<div id="rete" class="node-editor"></div>
-<button id="savebtn" style="position:absolute; top:0; left: 120px; background-color: yellow; font-size: 14px; margin: 10px;">Save to RIB</button>
-<button id="loadbtn" style="position:absolute; top:0; left: 10px; background-color: yellow; font-size: 14px; margin: 10px;">Load (broken)</button>
-<div style="position:absolute; top:40; left: 40px; font-size: 14px; margin: 10px;"><textarea id="outputs" rows="4" cols="50">
-Output rib here!
-</textarea></div>
+<div id="rete" class="node-editor">
+
+<div style="position: absolute; transform: translate(10px, 10px);"><div class="node"><div class="title"><a style="color:white;" id="download_link" download="material_rib.txt" href=”” >Export RIB</a></div></div></div>
+
+</div>
 
 
 <script src='https://cdn.jsdelivr.net/npm/rete@1.4.1-rc.1/build/rete.min.js'></script>
@@ -76,7 +75,6 @@ Output rib here!
 <script src='https://cdn.jsdelivr.net/npm/d3-shape@1.2.2/dist/d3-shape.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/d3-path@1.0.7/dist/d3-path.min.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/rete-connection-path-plugin@0.2.0/build/connection-path-plugin.min.js'></script>
-
 
 <script src='https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.min.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/rete-vue-render-plugin@0.2.6/build/vue-render-plugin.min.js'></script>

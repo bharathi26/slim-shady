@@ -323,7 +323,7 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 "PxrWireframe",
 "PxrWorley"];
 
-	var PxrSurfaceMaterialsList = ["PxrSurface", "PxrLayerSurface", "PxrLayer", "PxrLayerMixer"]
+	var PxrSurfaceMaterialsList = ["PxrSurface", "PxrLayerSurface", "PxrLayer", "PxrLayerMixer", "PxrConstant"]
 
 	var components =[]
 
@@ -364,14 +364,31 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
         engine.register(c);
     });
 	
-	document.getElementById("savebtn").onclick = async ()=> {
+	document.getElementById("download_link").onclick = async ()=> {
 	console.log(editor.toJSON());
 	editorJSON = editor.toJSON();
 	var outputRib = ''
+	var PatternString = ''
 	//document.getElementById("outputs").innerHTML = JSON.stringify(editor.toJSON(), null, "\t");
 		for (i in editorJSON.nodes) {
 			
-			var PatternString = "Pattern \"" + editorJSON.nodes[i].name + "\" \"" + editorJSON.nodes[i].name + editorJSON.nodes[i].id + "\"\n"
+			switch (editorJSON.nodes[i].name) {
+				case "PxrSurface":
+					PatternString = "Bxdf \"" + editorJSON.nodes[i].name + "\" \"" + editorJSON.nodes[i].name + editorJSON.nodes[i].id + "\"\n"
+					break;
+				case "PxrLayerSurface":
+					PatternString = "Bxdf \"" + editorJSON.nodes[i].name + "\" \"" + editorJSON.nodes[i].name + editorJSON.nodes[i].id + "\"\n"
+					break;
+				case "PxrLayer":
+					PatternString = "Bxdf \"" + editorJSON.nodes[i].name + "\" \"" + editorJSON.nodes[i].name + editorJSON.nodes[i].id + "\"\n"
+					break;
+				case "PxrLayerMixer":
+					PatternString = "Bxdf \"" + editorJSON.nodes[i].name + "\" \"" + editorJSON.nodes[i].name + editorJSON.nodes[i].id + "\"\n"
+					break;
+				default:
+					PatternString = "Pattern \"" + editorJSON.nodes[i].name + "\" \"" + editorJSON.nodes[i].name + editorJSON.nodes[i].id + "\"\n"
+			}
+			
 			var out2 = JSON.stringify(editorJSON.nodes[i].inputs)
 			//console.log(out);
 			//var keys = Object.keys(editorJSON.nodes[i].inputs);
@@ -403,32 +420,71 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 		console.log("\n")
 		outputRib = outputRib + "\n"
 		}
-	
+	outputRib = "#Slim Shady Material\n" + outputRib;
+	var data = new Blob([outputRib], {type: 'text/plain'});
+	var url = window.URL.createObjectURL(data);
+
+	document.getElementById('download_link').href = url;
 	document.getElementById("outputs").innerHTML = outputRib;
 
 	};
-
-	document.getElementById("loadbtn").onclick = async ()=> {
-	var data = JSON.parse(document.getElementById("outputs").innerHTML)
-	await editor.fromJSON(data);
-	};
 	
-	var PxrBlend = await components[7].createNode({ "int operation": 5 });
-	var PxrCurvature = await components[14].createNode({ "int numSamples": 4 });
-	var PxrDirt = await components[15].createNode({ "int numSamples": 4 });
+	
+	var PxrFractal = await components[23].createNode({ 
+	"int surfacePosition": 0, 
+	"int layers": "1", 
+	"float frequency": "2.5",
+	"float lacunarity": "16.0",
+	"float dimension": "1.0",
+	"float erosion": "0.0",
+	"float variation": "1.0",
+	"int turbulent": "0"
+	});
+	
+	var PxrNormalMap = await components[35].createNode({ 
+	"float bumpScale": "-0.2",
+	"normal bumpOverlay": "0 0 0",
+	"int invertBump": "0",
+	"int orientation": "2",
+	"int flipX": "0",
+	"int flipY": "0",
+	"int firstChannel": "0",
+	"int atlasStyle": "0",
+	"int invertT": "1",
+	"float blur": "0.0",
+	"int lerp": "1",
+	"int filter": "1",
+	"int reverse": "0",
+	"float adjustAmount": "0.0",
+	"float surfaceNormalMix": "0.0",
+	"int disable": [0]
+	});
+	
+	var PxrSurface = await components[61].createNode({ 
+	"float diffuseGain": "1.0",
+	"color diffuseColor": "0.94 0.2 0.25",
+	"int diffuseDoubleSided": "1",
+	"color specularFaceColor": "0.1 0.1 0.15",
+	"color specularIor": "1.54 1.54 1.54",
+	"float specularRoughness": "0.25",
+	"int specularDoubleSided": "0",
+	"float presence": "1"
+	});
+	
 
 	//PxrCurvature.data["collapsed"] = true;
 
-	PxrBlend.position = [800, 100];
-	PxrCurvature.position = [300, 20];
-	PxrDirt.position = [200, 520];
+	PxrFractal.position = [100, 20];
+	PxrNormalMap.position = [400, 20];
+	PxrSurface.position = [800, 20];
 
-	editor.addNode(PxrBlend);
-	editor.addNode(PxrCurvature);
-	editor.addNode(PxrDirt);
+	editor.addNode(PxrFractal);
+	editor.addNode(PxrNormalMap);
+	editor.addNode(PxrSurface);
 
-	editor.connect(PxrCurvature.outputs.get("resultRGB"), PxrBlend.inputs.get("color topRGB"));
-	editor.connect(PxrDirt.outputs.get("resultG"), PxrBlend.inputs.get("float bottomA"));
+	
+	editor.connect(PxrFractal.outputs.get("resultRGB"), PxrNormalMap.inputs.get("color inputRGB"));
+	editor.connect(PxrNormalMap.outputs.get("resultN"), PxrSurface.inputs.get("normal bumpNormal"));
 
 
 	editor.on('process nodecreated noderemoved connectioncreated connectionremoved', async () => {
