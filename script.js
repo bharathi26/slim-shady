@@ -19,7 +19,7 @@ numSocket.combineWith(vectorSocket);
 
 var VueNumControl = {
   props: ['readonly', 'emitter', 'ikey', 'getData', 'putData'],
-  template: '<input :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop=""/>',
+  template: '<input type="text" :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop=""/>',
   data() {
     return {
       value: 0,
@@ -27,7 +27,7 @@ var VueNumControl = {
   },
   methods: {
     change(e){
-      this.value = +e.target.value;
+      this.value = e.target.value;
       this.update();
     },
     update() {
@@ -102,11 +102,13 @@ class PxrPatternComponent extends Rete.Component {
 		this.text = PxrPattern; //PxrCurvature
 		this.data.component = CustomPxrPatternNode;
 	}
-
+	
+	
 	builder(node) {
 		
 		var PxrParams
 		var PxrOutputs
+		var PxrShaderType
 		var usedSocket = numSocket
 		
 		var xhr = new XMLHttpRequest();
@@ -116,11 +118,13 @@ class PxrPatternComponent extends Rete.Component {
 				var xmlDoc = parser.parseFromString(xhr.responseText, "text/xml");
 				PxrParams = xmlDoc.getElementsByTagName("param");
 				PxrOutputs = xmlDoc.getElementsByTagName("output");
+				PxrShaderType = xmlDoc.getElementsByTagName("shaderType")[0].getElementsByTagName("tag")[0].getAttribute("value")
 			}
 		}
 		xhr.open('GET', "https://raw.githubusercontent.com/sttng/LDD/master/args/" + this.text + ".args", false);
 		xhr.send();
-
+		node.data.PxrShaderType = PxrShaderType;
+		
 		//Input Nodes (Params in RenderMan)
 		var i
 		for (i = 0; i < PxrParams.length; i++) {
@@ -196,7 +200,7 @@ class PxrPatternComponent extends Rete.Component {
 	}
 
 	worker(node, inputs, outputs) {
-		outputs["num"] = node.data.num;
+		
 	}
 }
 
@@ -413,7 +417,7 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 	}
 	
 	for (i = 0; i < PxrSurfaceMaterialsList.length; i++){
-		components.push(new PxrSurfaceMaterialComponent(PxrSurfaceMaterialsList[i]))
+		components.push(new PxrPatternComponent(PxrSurfaceMaterialsList[i]))
 	}
 
 	components.push(new PxrLayerComponent("PxrLayer"))
@@ -455,19 +459,9 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 	var PatternString = ''
 	//document.getElementById("outputs").innerHTML = JSON.stringify(editor.toJSON(), null, "\t");
 		for (i in editorJSON.nodes) {
+			//console.log(editorJSON.nodes[i].data.PxrShaderType);
+			PatternString = editorJSON.nodes[i].data.PxrShaderType +" \"" + editorJSON.nodes[i].name + "\" \"" + editorJSON.nodes[i].name + editorJSON.nodes[i].id + "\"\n"
 			
-			switch (editorJSON.nodes[i].name) {
-				case "PxrSurface":
-					PatternString = "Bxdf \"" + editorJSON.nodes[i].name + "\" \"" + editorJSON.nodes[i].name + editorJSON.nodes[i].id + "\"\n"
-					break;
-				case "PxrLayerSurface":
-					PatternString = "Bxdf \"" + editorJSON.nodes[i].name + "\" \"" + editorJSON.nodes[i].name + editorJSON.nodes[i].id + "\"\n"
-					break;
-				default:
-					PatternString = "Pattern \"" + editorJSON.nodes[i].name + "\" \"" + editorJSON.nodes[i].name + editorJSON.nodes[i].id + "\"\n"
-			}
-			
-			var out2 = JSON.stringify(editorJSON.nodes[i].inputs)
 			//console.log(out);
 			//var keys = Object.keys(editorJSON.nodes[i].inputs);
 			//for ( var j in Object.keys(editorJSON.nodes[i].inputs)) {
@@ -478,6 +472,11 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 			var dataNodes = ''
 			for ( var j in Object.keys(editorJSON.nodes[i].data)) {
 				//console.log("\t\"" + keys[j] + "\" [" + editorJSON.nodes[i].data[keys[j]] + "]");
+				if (keys[j] == "PxrShaderType") {
+					console.log("Hererere \n");
+					 continue; 
+				}	
+				
 				dataNodes = dataNodes + "\t\"" + keys[j] + "\" [" + editorJSON.nodes[i].data[keys[j]] + "]\n"
 			}
 			
@@ -498,12 +497,12 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 		console.log("\n")
 		outputRib = outputRib + "\n"
 		}
-	outputRib = "#Slim Shady Material\n" + outputRib;
+	outputRib = "#Slim Shady Material\n" + outputRib + JSON.stringify(editorJSON, null, "\t");
 	var data = new Blob([outputRib], {type: 'text/plain'});
 	var url = window.URL.createObjectURL(data);
 
 	document.getElementById('download_link').href = url;
-	document.getElementById("outputs").innerHTML = outputRib;
+	//document.getElementById("outputs").innerHTML = outputRib;
 
 	};
 	
