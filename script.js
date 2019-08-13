@@ -425,9 +425,15 @@ class PxrLayerComponent extends Rete.Component {
 			connString = ''
 			for ( var j in Object.keys(editorJSON.nodes[i].inputs)) {
 				var conn = editorJSON.nodes[i].inputs[mkeys[j]].connections[0]
-				
+				var isVstruct =  mkeys[j].split(" ");
+				isVstruct = isVstruct[0];
+				var isVstructNotice = ''
+				if (isVstruct == 'vstruct'){
+					console.log(isVstruct + " found. Do some handling here! Idea: grab the xml args file. Parse the input params of the grabbed file. Match with the outputs of editorJSON.nodes[conn.node].name")
+					isVstructNotice = "##Need vstruct handling !\n"
+				}
 				if (conn) {
-				connString = connString + "\t\"reference " + mkeys[j] + "\" [\"" + editorJSON.nodes[conn.node].name + conn.node + ":" + conn.output +"\"]\n"
+				connString = connString + isVstructNotice + "\t\"reference " + mkeys[j] + "\" [\"" + editorJSON.nodes[conn.node].name + conn.node + ":" + conn.output +"\"]\n"
 				}
 			}
 			
