@@ -429,7 +429,7 @@ class PxrLayerComponent extends Rete.Component {
 				isVstruct = isVstruct[0];
 				var isVstructNotice = ''
 				if (isVstruct == 'vstruct'){
-					console.log(isVstruct + " found. Do some handling here! Idea: grab the xml args file. Parse the input params of the grabbed file. Match with the outputs of editorJSON.nodes[conn.node].name")
+					console.log(isVstruct + " found. Do some handling here! Idea: grab the xml args file. Parse the input params of the grabbed file. Match with the xml args outputs of editorJSON.nodes[conn.node].name")
 					isVstructNotice = "##Need vstruct handling !\n"
 				}
 				if (conn) {
