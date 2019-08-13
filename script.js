@@ -63,12 +63,6 @@ var CustomPxrPatternSocket = {
   props: ['type', 'socket', 'used']
 }
 
-var CustomPxrSurfaceMaterialSocket = {
-  template: `<div class="socket"
-    :class="[type, socket.name, used()?'used':''] | kebab"
-    :title="socket.name+'blaa\\n'+socket.hint"></div>`,
-  props: ['type', 'socket', 'used']
-}
 
 var CustomPxrPatternNode = {
 	template,
@@ -83,18 +77,6 @@ var CustomPxrPatternNode = {
 	}
 }
 
-var CustomPxrSurfaceMaterialNode = {
-	template,
-	mixins: [VueRenderPlugin.mixin],
-	methods:{
-		used(io){
-			return io.connections.length;
-		}
-	},
-	components: {
-		Socket: /*VueRenderPlugin.Socket*/CustomPxrSurfaceMaterialSocket
-	}
-}
 
 class PxrPatternComponent extends Rete.Component {
 	constructor(PxrPattern) {
@@ -123,13 +105,26 @@ class PxrPatternComponent extends Rete.Component {
 		}
 		xhr.open('GET', "https://raw.githubusercontent.com/sttng/LDD/master/args/" + this.text + ".args", false);
 		xhr.send();
+		
+		// Read shader type (pattern, bxdf, etc) from xml args file
 		node.data.PxrShaderType = PxrShaderType;
 		
 		//Input Nodes (Params in RenderMan)
 		var i
 		for (i = 0; i < PxrParams.length; i++) {
+			var VstructMember = PxrParams[i].getAttribute("vstructmember");
 			
-			switch (PxrParams[i].getAttribute("type").replace( /\s/g, '')) {
+			if (VstructMember) {
+				continue;
+			}
+			
+			var patternType = PxrParams[i].getAttribute("type").replace( /\s/g, '')
+			
+			if (typeof PxrParams[i].getElementsByTagName("tag")[0] != 'undefined') {
+				patternType = PxrParams[i].getElementsByTagName("tag")[0].getAttribute("value")
+			}
+			
+			switch (patternType) {
 				case "color":
 					usedSocket = colorSocket;
 					break;
@@ -157,15 +152,26 @@ class PxrPatternComponent extends Rete.Component {
 				default:
 					usedSocket = numSocket;
 			}
+			var checkfortags = PxrParams[i].getElementsByTagName("tag");
 			
-			var PatternInputs = new Rete.Input(PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
-			PatternInputs.addControl(new NumControl(this.editor, PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name")));
+			//console.log(this.text)
+			//console.log(PxrParams[i].getAttribute("name"))
+			//console.log(PxrParams[i].getElementsByTagName("tag")[0]);
+			
+			var PatternInputs = new Rete.Input(patternType + " " + PxrParams[i].getAttribute("name"), patternType + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
+			PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name")));
 			node.addInput(PatternInputs)
 		}
 		
 		//Output Nodes
 		for (i = 0; i < PxrOutputs.length; i++) {
 			var outputTagValue = "";
+			var VstructMember = PxrOutputs[i].getAttribute("vstructmember");
+			
+			if (VstructMember) {
+				continue;
+			}
+			
 			var outputTags = PxrOutputs[i].getElementsByTagName("tag");
 				var j
 				for (j = 0; j < outputTags.length; j++) {
@@ -281,68 +287,6 @@ class PxrLayerComponent extends Rete.Component {
 }
 
 
-
-
-
-
-
-class PxrSurfaceMaterialComponent extends Rete.Component {
-	constructor(PxrPattern) {
-		super(PxrPattern);
-		this.text = PxrPattern; //PxrCurvature
-		this.data.component = CustomPxrSurfaceMaterialNode;
-	}
-
-	builder(node) {
-		
-		var PxrParams
-		var PxrOutputs
-		var usedSocket = numSocket
-		
-		var xhr = new XMLHttpRequest();
-		xhr.onreadystatechange = function() {
-			if (xhr.readyState == 4 && xhr.status == 200) {
-				var parser = new DOMParser();
-				var xmlDoc = parser.parseFromString(xhr.responseText, "text/xml");
-				PxrParams = xmlDoc.getElementsByTagName("param");
-				PxrOutputs = xmlDoc.getElementsByTagName("output");
-			}
-		}
-		xhr.open('GET', "https://raw.githubusercontent.com/sttng/LDD/master/args/" + this.text + ".args", false);
-		xhr.send();
-
-		//Input Nodes (Params in RenderMan)
-		var i
-		for (i = 0; i < PxrParams.length; i++) {
-			
-			if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "float"){
-				usedSocket = floatSocket;
-			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "int") {
-				usedSocket = intSocket;
-			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "color") {
-				usedSocket = colorSocket;
-			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "string") {
-				usedSocket = stringSocket;
-			} else if (PxrParams[i].getAttribute("type").replace( /\s/g, '') == "struct") {
-				usedSocket = structSocket;
-			} else {
-				usedSocket = numSocket;
-			}
-			
-			var PatternInputs = new Rete.Input(PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
-			PatternInputs.addControl(new NumControl(this.editor, PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name")));
-			node.addInput(PatternInputs)
-		}
-	
-		return node
-	}
-
-	worker(node, inputs, outputs) {
-		outputs["num"] = node.data.num;
-	}
-}
-
-
 (async () => {
 	var container = document.querySelector('#rete');
 
@@ -420,7 +364,7 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 		components.push(new PxrPatternComponent(PxrSurfaceMaterialsList[i]))
 	}
 
-	components.push(new PxrLayerComponent("PxrLayer"))
+	components.push(new PxrPatternComponent("PxrLayer"))
 	components.push(new PxrPatternComponent("PxrLayerMixer"))
 
     var editor = new Rete.NodeEditor('demo@0.1.0', container);
@@ -459,7 +403,6 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 	var PatternString = ''
 	//document.getElementById("outputs").innerHTML = JSON.stringify(editor.toJSON(), null, "\t");
 		for (i in editorJSON.nodes) {
-			//console.log(editorJSON.nodes[i].data.PxrShaderType);
 			PatternString = editorJSON.nodes[i].data.PxrShaderType +" \"" + editorJSON.nodes[i].name + "\" \"" + editorJSON.nodes[i].name + editorJSON.nodes[i].id + "\"\n"
 			
 			//console.log(out);
@@ -467,13 +410,10 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 			//for ( var j in Object.keys(editorJSON.nodes[i].inputs)) {
 			//	console.log("\t\"" + keys[j] + "\" [" + editorJSON.nodes[i].data[keys[j]] + "]");
 			//}
-			//console.log("\n");
 			var keys = Object.keys(editorJSON.nodes[i].data);
 			var dataNodes = ''
 			for ( var j in Object.keys(editorJSON.nodes[i].data)) {
-				//console.log("\t\"" + keys[j] + "\" [" + editorJSON.nodes[i].data[keys[j]] + "]");
 				if (keys[j] == "PxrShaderType") {
-					console.log("Hererere \n");
 					 continue; 
 				}	
 				
@@ -488,7 +428,6 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 				
 				if (conn) {
 				connString = connString + "\t\"reference " + mkeys[j] + "\" [\"" + editorJSON.nodes[conn.node].name + conn.node + ":" + conn.output +"\"]\n"
-				//console.log("\t\"reference " + mkeys[j] + "\" [\"" + editorJSON.nodes[conn.node].name + conn.node + ":" + conn.output +"\"]");
 				}
 			}
 			
@@ -566,7 +505,6 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 	
 	//var PxrSurface = await components[61].createNode({ "float diffuseGain": "1.0","color diffuseColor": "0.94 0.2 0.25","int diffuseDoubleSided": "1","color specularFaceColor": "0.1 0.1 0.15","color specularIor": "1.54 1.54 1.54","float specularRoughness": "0.25","int specularDoubleSided": "0","float presence": "1"});
 	
-
 	//PxrCurvature.data["collapsed"] = true;
 	
 	PxrWireframe.position = [10, 40];
@@ -595,23 +533,26 @@ class PxrSurfaceMaterialComponent extends Rete.Component {
 	editor.connect(PxrExposure.outputs.get("resultRGB"), PxrColorCorrect.inputs.get("color inputRGB"));
 	editor.connect(PxrColorCorrect.outputs.get("resultRGB"), PxrInvert.inputs.get("color inputRGB"));
 	editor.connect(PxrInvert.outputs.get("resultRGB"), PxrToFloat.inputs.get("color input"));
-	editor.connect(PxrLayer1.outputs.get("pxrMaterialOut_diffuseGain"), PxrLayerMixer.inputs.get("float baselayer_diffuseGain"));
-	editor.connect(PxrLayer1.outputs.get("pxrMaterialOut_diffuseColor"), PxrLayerMixer.inputs.get("color baselayer_diffuseColor"));
-	editor.connect(PxrWireLayer.outputs.get("pxrMaterialOut_diffuseColor"), PxrLayerMixer.inputs.get("color layer1_diffuseColor"));
+	//editor.connect(PxrLayer1.outputs.get("pxrMaterialOut_diffuseGain"), PxrLayerMixer.inputs.get("float baselayer_diffuseGain"));
+	//editor.connect(PxrLayer1.outputs.get("pxrMaterialOut_diffuseColor"), PxrLayerMixer.inputs.get("color baselayer_diffuseColor"));
+	editor.connect(PxrLayer1.outputs.get("pxrMaterialOut"), PxrLayerMixer.inputs.get("vstruct baselayer"));
+	//editor.connect(PxrWireLayer.outputs.get("pxrMaterialOut_diffuseColor"), PxrLayerMixer.inputs.get("color layer1_diffuseColor"));
+	editor.connect(PxrWireLayer.outputs.get("pxrMaterialOut"), PxrLayerMixer.inputs.get("vstruct layer1"));
 	editor.connect(PxrToFloat.outputs.get("resultF"), PxrLayerMixer.inputs.get("float layer1Mask"));
 	
-	editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_diffuseGain"), PxrLayerSurface.inputs.get("float diffuseGain"));
-	editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_diffuseColor"), PxrLayerSurface.inputs.get("color diffuseColor"));
-	editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_diffuseRoughness"), PxrLayerSurface.inputs.get("float diffuseRoughness"));
-	editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_diffuseBackColor"), PxrLayerSurface.inputs.get("color diffuseBackColor"));
-	editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_diffuseTransmitGain"), PxrLayerSurface.inputs.get("float diffuseTransmitGain"));
-	editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_diffuseTransmitColor"), PxrLayerSurface.inputs.get("color diffuseTransmitColor"));
-	editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_specularFaceColor"), PxrLayerSurface.inputs.get("color specularFaceColor"));
-	editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_specularEdgeColor"), PxrLayerSurface.inputs.get("color specularEdgeColor"));
-	editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_specularIor"), PxrLayerSurface.inputs.get("color specularIor"));
-	editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_specularExtinctionCoeff"), PxrLayerSurface.inputs.get("color specularExtinctionCoeff"));
-	editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_specularRoughness"), PxrLayerSurface.inputs.get("float specularRoughness"));
-	editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_specularAnisotropy"), PxrLayerSurface.inputs.get("float specularAnisotropy"));
+	//editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_diffuseGain"), PxrLayerSurface.inputs.get("float diffuseGain"));
+	//editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_diffuseColor"), PxrLayerSurface.inputs.get("color diffuseColor"));
+	//editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_diffuseRoughness"), PxrLayerSurface.inputs.get("float diffuseRoughness"));
+	//editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_diffuseBackColor"), PxrLayerSurface.inputs.get("color diffuseBackColor"));
+	//editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_diffuseTransmitGain"), PxrLayerSurface.inputs.get("float diffuseTransmitGain"));
+	//editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_diffuseTransmitColor"), PxrLayerSurface.inputs.get("color diffuseTransmitColor"));
+	//editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_specularFaceColor"), PxrLayerSurface.inputs.get("color specularFaceColor"));
+	//editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_specularEdgeColor"), PxrLayerSurface.inputs.get("color specularEdgeColor"));
+	//editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_specularIor"), PxrLayerSurface.inputs.get("color specularIor"));
+	//editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_specularExtinctionCoeff"), PxrLayerSurface.inputs.get("color specularExtinctionCoeff"));
+	//editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_specularRoughness"), PxrLayerSurface.inputs.get("float specularRoughness"));
+	//editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut_specularAnisotropy"), PxrLayerSurface.inputs.get("float specularAnisotropy"));
+	editor.connect(PxrLayerMixer.outputs.get("pxrMaterialOut"), PxrLayerSurface.inputs.get("vstruct inputMaterial"));
 	
 	//editor.connect(PxrFractal.outputs.get("resultRGB"), PxrNormalMap.inputs.get("color inputRGB"));
 	//editor.connect(PxrNormalMap.outputs.get("resultN"), PxrSurface.inputs.get("normal bumpNormal"));
