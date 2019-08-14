@@ -1,3 +1,5 @@
+var PxrJSON = {};
+
 var template = document.querySelector('#CustomPxrPatternNode').innerHTML;
 
 var colorSocket = new Rete.Socket("color");
@@ -92,12 +94,13 @@ class PxrPatternComponent extends Rete.Component {
 		var PxrOutputs
 		var PxrShaderType
 		var usedSocket = numSocket
+		var xmlDoc
 		
 		var xhr = new XMLHttpRequest();
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState == 4 && xhr.status == 200) {
 				var parser = new DOMParser();
-				var xmlDoc = parser.parseFromString(xhr.responseText, "text/xml");
+				xmlDoc = parser.parseFromString(xhr.responseText, "text/xml");
 				PxrParams = xmlDoc.getElementsByTagName("param");
 				PxrOutputs = xmlDoc.getElementsByTagName("output");
 				PxrShaderType = xmlDoc.getElementsByTagName("shaderType")[0].getElementsByTagName("tag")[0].getAttribute("value")
@@ -105,6 +108,23 @@ class PxrPatternComponent extends Rete.Component {
 		}
 		xhr.open('GET', "https://raw.githubusercontent.com/sttng/LDD/master/args/" + this.text + ".args", false);
 		xhr.send();
+		
+		var oSerializer = new XMLSerializer();
+		var stringXML = oSerializer.serializeToString(xmlDoc);
+		stringXML = stringXML.replace(/\s+/g, ' '); // Keep only one space character
+		stringXML = stringXML.replace(/>\s*/g, '>'); // Remove space after >
+		stringXML = stringXML.replace(/\s*</g, '<'); // Remove space before <
+
+		var oParser = new DOMParser();
+		xmlDoc = oParser.parseFromString(stringXML, "application/xml");
+		
+		
+		var jsonText = xmlToJson(xmlDoc);
+		var PxrPattern = this.text
+		
+		// PxrJSON will store all used PxrPatterns in a JSON file (for latter vstruct handling)
+		PxrJSON[PxrPattern] = jsonText;
+		console.log(JSON.stringify(PxrJSON), null, "\t");
 		
 		// Read shader type (pattern, bxdf, etc) from xml args file
 		node.data.PxrShaderType = PxrShaderType;
@@ -573,3 +593,44 @@ class PxrLayerComponent extends Rete.Component {
     editor.view.resize();
     editor.trigger('process');
 })();
+
+
+// Changes XML to JSON
+function xmlToJson(xml) {
+	
+	// Create the return object
+	var obj = {};
+
+	if (xml.nodeType == 1) { // element
+		// do attributes
+		if (xml.attributes.length > 0) {
+		obj["@attributes"] = {};
+			for (var j = 0; j < xml.attributes.length; j++) {
+				var attribute = xml.attributes.item(j);
+				obj["@attributes"][attribute.nodeName] = attribute.nodeValue.replace(/[\n\t\r]/g,"").trim();
+			}
+		}
+	} else if (xml.nodeType == 3) { // text
+		obj = xml.nodeValue.replace(/[\n\t\r]/g,"").trim();
+	}
+
+	// do children
+	if (xml.hasChildNodes()) {
+		for(var i = 0; i < xml.childNodes.length; i++) {
+			var item = xml.childNodes.item(i);
+			var nodeName = item.nodeName;
+			if (typeof(obj[nodeName]) == "undefined") {
+				obj[nodeName] = xmlToJson(item);
+			} else {
+				if (typeof(obj[nodeName].push) == "undefined") {
+					var old = obj[nodeName];
+					obj[nodeName] = [];
+					obj[nodeName].push(old);
+				}
+				obj[nodeName].push(xmlToJson(item));
+			}
+		}
+	}
+	return obj;
+};
+
