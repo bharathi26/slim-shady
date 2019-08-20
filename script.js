@@ -133,7 +133,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 			var VstructMember = PxrParams[i].getAttribute("vstructmember");
 			
 			if (VstructMember) {
-				continue;
+				continue; //ignore input nodes which are part of vstructs
 			}
 			
 			var patternType = PxrParams[i].getAttribute("type").replace( /\s/g, '')
@@ -183,7 +183,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 			var VstructMember = PxrOutputs[i].getAttribute("vstructmember");
 			
 			if (VstructMember) {
-				continue;
+				continue; //ignore output nodes which are part of vstructs
 			}
 			
 			var outputTags = PxrOutputs[i].getElementsByTagName("tag");
@@ -340,7 +340,6 @@ class PxrXmlArgsComponent extends Rete.Component {
     });
 	
 	document.getElementById("download_link").onclick = async ()=> {
-	//console.log(editor.toJSON());
 	editorJSON = editor.toJSON();
 	var outputRib = ''
 	var PatternString = ''
@@ -380,26 +379,32 @@ class PxrXmlArgsComponent extends Rete.Component {
 						
 						for(var k = 0; k < potentialVstructOutput.length; k++) {
 							
-							if (potentialVstructOutput[k]["@attributes"].vstructmember){
+							if (potentialVstructOutput[k]["@attributes"].vstructmember){ // potentialVstructOutput is really a vstructmember
 								
 								var currentOutputVstructMemberName = potentialVstructOutput[k]["@attributes"].vstructmember.split(".");
 								currentOutputVstructMemberName = currentOutputVstructMemberName[0]
 								
-								if (currentOutputVstructMemberName == InputConnections.output){ //In the case we have more then 1 vstruct output nodes, we need to be sure to only go through those to which we are currently connected.
+								if (currentOutputVstructMemberName == InputConnections.output){ //In the case we have more then one vstruct output nodes, we need to be sure to only go through those members to which we are currently connected.
 									if (evaluateVstructConditionalExpr(potentialVstructOutput[k]["@attributes"].vstructConditionalExpr, editorJSON.nodes[InputConnections.node])) {// evaluate the vstructConditionalExpr formula of the actual instance of PxrXmlArgs which is "sending"
 										//console.log(potentialVstructOutput[k]["@attributes"].vstructConditionalExpr)
 										
 										var vstructmemberSecondPart = potentialVstructOutput[k]["@attributes"].vstructmember.split(".");
 										vstructmemberSecondPart = vstructmemberSecondPart[1]
 										
-										if (PxrJSON[editorJSON.nodes[i].name].args.param.filter(x => x["@attributes"].vstructmember === currentNodeName + "." + vstructmemberSecondPart).length > 0) { //check if for the actual sending virtual connection there is an input existing.
-											//console.log(JSON.stringify(PxrJSON.PxrLayerMixer.args.param.filter(x => x["@attributes"].vstructmember === currentNodeName + "." + vstructmemberSecondPart)))
-											//console.log(currentNodeName + "." + vstructmemberSecondPart)
-											console.log(editorJSON.nodes[i].name)
-											var filterJson = PxrJSON.PxrLayerMixer.args.param.filter(x => x["@attributes"].vstructmember === currentNodeName + "." + vstructmemberSecondPart);
-											//console.log(filterJson[0]["@attributes"].name)
-											isVstructNotice = isVstructNotice + "\t\"reference " + filterJson[0]["@attributes"].type + " " + filterJson[0]["@attributes"].name + "\" [\"" + editorJSON.nodes[InputConnections.node].name + InputConnections.node + ":" + potentialVstructOutput[k]["@attributes"].name +"\"]\n"
-										} else if (PxrJSON[editorJSON.nodes[i].name].args.page.filter(x => x["@attributes"].vstructmember === currentNodeName + "." + vstructmemberSecondPart).length > 0) { //PxrLayerSurface has a slightly different XML dialect and has a page tag for some!! param..... ouch
+										//dirty loop to push the params below or under page item down to the "normal" params
+										for (var m = 0; m < PxrJSON[editorJSON.nodes[i].name].args.page.length; m++) {
+											for (var n = 0; n < PxrJSON[editorJSON.nodes[i].name].args.page[m].param.length; n++) {
+												PxrJSON[editorJSON.nodes[i].name].args.param.push(PxrJSON[editorJSON.nodes[i].name].args.page[m].param[n])
+											}
+										}
+										
+										var filteredPxrJSON = PxrJSON[editorJSON.nodes[i].name].args.param.filter(x => x["@attributes"].vstructmember === currentNodeName + "." + vstructmemberSecondPart); //check if for the actual sending virtual connection there is an input existing.
+										if (filteredPxrJSON.length > 0) {
+											//console.log(filteredPxrJSON[0]["@attributes"].name)
+											isVstructNotice = isVstructNotice + "\t\"reference " + filteredPxrJSON[0]["@attributes"].type + " " + filteredPxrJSON[0]["@attributes"].name + "\" [\"" + editorJSON.nodes[InputConnections.node].name + InputConnections.node + ":" + potentialVstructOutput[k]["@attributes"].name +"\"]\n"
+										}
+										
+										else if (PxrJSON[editorJSON.nodes[i].name].args.page.filter(x => x["@attributes"].vstructmember === currentNodeName + "." + vstructmemberSecondPart).length > 0) { //PxrLayerSurface has a slightly different XML dialect and has a page tag for some!! param..... ouch
 											
 										}
 									}
@@ -420,13 +425,12 @@ class PxrXmlArgsComponent extends Rete.Component {
 			
 		outputRib = outputRib + "\n"
 		}
-	outputRib = "#Slim Shady Material\n" + outputRib + JSON.stringify(editorJSON, null, "\t");
+	outputRib = "#Slim Shady Material\n" + outputRib; // + JSON.stringify(editorJSON, null, "\t")
 	var data = new Blob([outputRib], {type: 'text/plain'});
 	var url = window.URL.createObjectURL(data);
 
 	document.getElementById('download_link').href = url;
 	//document.getElementById("outputs").innerHTML = outputRib;
-
 	};
 	
 	
@@ -593,6 +597,7 @@ function xmlToJson(xml) {
 };
 
 function evaluateVstructConditionalExpr(vstructConditionalExprString, editorJSONnodes) {
+	console.log(vstructConditionalExprString);
 	return true
 }
 
