@@ -58,7 +58,7 @@ class NumControl extends Rete.Control {
 }
 
 
-var CustomPxrPatternSocket = {
+var CustomPxrXmlArgsSocket = {
   template: `<div class="socket"
     :class="[type, socket.name, used()?'used':''] | kebab"
     :title="socket.name+'\\n'+socket.hint"></div>`,
@@ -66,7 +66,7 @@ var CustomPxrPatternSocket = {
 }
 
 
-var CustomPxrPatternNode = {
+var CustomPxrXmlArgsNode = {
 	template,
 	mixins: [VueRenderPlugin.mixin],
 	methods:{
@@ -75,19 +75,18 @@ var CustomPxrPatternNode = {
 		}
 	},
 	components: {
-		Socket: /*VueRenderPlugin.Socket*/CustomPxrPatternSocket
+		Socket: /*VueRenderPlugin.Socket*/CustomPxrXmlArgsSocket
 	}
 }
 
 
-class PxrPatternComponent extends Rete.Component {
+class PxrXmlArgsComponent extends Rete.Component {
 	constructor(PxrPattern) {
 		super(PxrPattern);
 		this.text = PxrPattern; //PxrCurvature
-		this.data.component = CustomPxrPatternNode;
+		this.data.component = CustomPxrXmlArgsNode;
 	}
-	
-	
+
 	builder(node) {
 		
 		var PxrParams
@@ -118,18 +117,17 @@ class PxrPatternComponent extends Rete.Component {
 		var oParser = new DOMParser();
 		xmlDoc = oParser.parseFromString(stringXML, "application/xml");
 		
-		
 		var jsonText = xmlToJson(xmlDoc);
 		var PxrPattern = this.text
+		jsonText.PxrPatternName = PxrPattern //A little redundant, but makes it easier later.
 		
-		// PxrJSON will store all used PxrPatterns in a JSON file (for latter vstruct handling)
+		// PxrJSON will store all used PxrXmlArgs in a JSON file (for latter vstruct handling)
 		PxrJSON[PxrPattern] = jsonText;
-		console.log(JSON.stringify(PxrJSON), null, "\t");
 		
-		// Read shader type (pattern, bxdf, etc) from xml args file
+		// Read shader type (pattern, bxdf, etc) from xml args file and store it in the Rete.js data node
 		node.data.PxrShaderType = PxrShaderType;
 		
-		//Input Nodes (Params in RenderMan)
+		//Input Nodes (called Params in RenderMan)
 		var i
 		for (i = 0; i < PxrParams.length; i++) {
 			var VstructMember = PxrParams[i].getAttribute("vstructmember");
@@ -174,10 +172,6 @@ class PxrPatternComponent extends Rete.Component {
 			}
 			var checkfortags = PxrParams[i].getElementsByTagName("tag");
 			
-			//console.log(this.text)
-			//console.log(PxrParams[i].getAttribute("name"))
-			//console.log(PxrParams[i].getElementsByTagName("tag")[0]);
-			
 			var PatternInputs = new Rete.Input(patternType + " " + PxrParams[i].getAttribute("name"), patternType + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
 			PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name")));
 			node.addInput(PatternInputs)
@@ -199,68 +193,6 @@ class PxrPatternComponent extends Rete.Component {
 			}
 			
 			switch (outputTagValue.replace( /\s/g, '')) {
-				case "float":
-					usedSocket = floatSocket;
-					break;
-				case "int":
-					usedSocket = intSocket;
-					break;
-				case "color":
-					usedSocket = colorSocket;
-					break;
-				case "string":
-					usedSocket = stringSocket;
-					break;
-				case "struct":
-					usedSocket = structSocket;
-					break;
-				default:
-					usedSocket = numSocket;
-			}
-			
-			var PatternOutputs = new Rete.Output(PxrOutputs[i].getAttribute("name"), outputTagValue + PxrOutputs[i].getAttribute("name"), usedSocket);
-			node.addOutput(PatternOutputs);
-		}
-	
-		return node
-	}
-
-	worker(node, inputs, outputs) {
-		
-	}
-}
-
-
-class PxrLayerComponent extends Rete.Component {
-	constructor(PxrPattern) {
-		super(PxrPattern);
-		this.text = PxrPattern; //PxrCurvature
-		this.data.component = CustomPxrPatternNode;
-	}
-
-	builder(node) {
-		
-		var PxrParams
-		var PxrOutputs
-		var usedSocket = numSocket
-		
-		var xhr = new XMLHttpRequest();
-		xhr.onreadystatechange = function() {
-			if (xhr.readyState == 4 && xhr.status == 200) {
-				var parser = new DOMParser();
-				var xmlDoc = parser.parseFromString(xhr.responseText, "text/xml");
-				PxrParams = xmlDoc.getElementsByTagName("param");
-				PxrOutputs = xmlDoc.getElementsByTagName("output");
-			}
-		}
-		xhr.open('GET', "https://raw.githubusercontent.com/sttng/LDD/master/args/" + this.text + ".args", false);
-		xhr.send();
-
-		//Input Nodes (Params in RenderMan)
-		var i
-		for (i = 0; i < PxrParams.length; i++) {
-			
-			switch (PxrParams[i].getAttribute("type").replace( /\s/g, '')) {
 				case "color":
 					usedSocket = colorSocket;
 					break;
@@ -289,20 +221,15 @@ class PxrLayerComponent extends Rete.Component {
 					usedSocket = numSocket;
 			}
 			
-			var PatternInputs = new Rete.Input(PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
-			PatternInputs.addControl(new NumControl(this.editor, PxrParams[i].getAttribute("type") + " " + PxrParams[i].getAttribute("name")));
-			node.addInput(PatternInputs)
-			
-			var PatternOutputs = new Rete.Output("pxrMaterialOut_" + PxrParams[i].getAttribute("name"), PxrParams[i].getAttribute("type") + " pxrMaterialOut_" + PxrParams[i].getAttribute("name"), usedSocket);
+			var PatternOutputs = new Rete.Output(PxrOutputs[i].getAttribute("name"), outputTagValue + PxrOutputs[i].getAttribute("name"), usedSocket);
 			node.addOutput(PatternOutputs);
 		}
-		
 	
 		return node
 	}
 
 	worker(node, inputs, outputs) {
-		outputs["num"] = node.data.num;
+		
 	}
 }
 
@@ -310,7 +237,7 @@ class PxrLayerComponent extends Rete.Component {
 (async () => {
 	var container = document.querySelector('#rete');
 
-	var PxrPatternsList = ["aaOceanPrmanShader",
+	var PxrXmlArgsList = ["aaOceanPrmanShader",
 "OSL Patterns",
 "PxrAdjustNormal",
 "PxrAttribute",
@@ -370,22 +297,18 @@ class PxrLayerComponent extends Rete.Component {
 "PxrVary",
 "PxrVoronoise",
 "PxrWireframe",
-"PxrWorley"];
-
-	var PxrSurfaceMaterialsList = ["PxrSurface", "PxrLayerSurface", "PxrConstant"]
+"PxrWorley",
+"PxrSurface",
+"PxrLayerSurface",
+"PxrConstant",
+"PxrLayer",
+"PxrLayerMixer"];
 
 	var components =[]
 
-	for (i = 0; i < PxrPatternsList.length; i++){
-		components.push(new PxrPatternComponent(PxrPatternsList[i]))
+	for (i = 0; i < PxrXmlArgsList.length; i++){
+		components.push(new PxrXmlArgsComponent(PxrXmlArgsList[i]))
 	}
-	
-	for (i = 0; i < PxrSurfaceMaterialsList.length; i++){
-		components.push(new PxrPatternComponent(PxrSurfaceMaterialsList[i]))
-	}
-
-	components.push(new PxrPatternComponent("PxrLayer"))
-	components.push(new PxrPatternComponent("PxrLayerMixer"))
 
     var editor = new Rete.NodeEditor('demo@0.1.0', container);
     editor.use(ConnectionPlugin.default);
@@ -417,15 +340,14 @@ class PxrLayerComponent extends Rete.Component {
     });
 	
 	document.getElementById("download_link").onclick = async ()=> {
-	console.log(editor.toJSON());
+	//console.log(editor.toJSON());
 	editorJSON = editor.toJSON();
 	var outputRib = ''
 	var PatternString = ''
-	//document.getElementById("outputs").innerHTML = JSON.stringify(editor.toJSON(), null, "\t");
+
 		for (i in editorJSON.nodes) {
 			PatternString = editorJSON.nodes[i].data.PxrShaderType +" \"" + editorJSON.nodes[i].name + "\" \"" + editorJSON.nodes[i].name + editorJSON.nodes[i].id + "\"\n"
 			
-			//console.log(out);
 			//var keys = Object.keys(editorJSON.nodes[i].inputs);
 			//for ( var j in Object.keys(editorJSON.nodes[i].inputs)) {
 			//	console.log("\t\"" + keys[j] + "\" [" + editorJSON.nodes[i].data[keys[j]] + "]");
@@ -434,7 +356,7 @@ class PxrLayerComponent extends Rete.Component {
 			var dataNodes = ''
 			for ( var j in Object.keys(editorJSON.nodes[i].data)) {
 				if (keys[j] == "PxrShaderType") {
-					 continue; 
+					 continue; // "PxrShaderType" is not a input node but stores if the current PxrXmlArgs is "pattern", "bxdf", etc. Thats why its skipped.
 				}	
 				
 				dataNodes = dataNodes + "\t\"" + keys[j] + "\" [" + editorJSON.nodes[i].data[keys[j]] + "]\n"
@@ -444,22 +366,58 @@ class PxrLayerComponent extends Rete.Component {
 			
 			connString = ''
 			for ( var j in Object.keys(editorJSON.nodes[i].inputs)) {
-				var conn = editorJSON.nodes[i].inputs[mkeys[j]].connections[0]
+				var InputConnections = editorJSON.nodes[i].inputs[mkeys[j]].connections[0]
 				var isVstruct =  mkeys[j].split(" ");
+				var currentNodeName = isVstruct[1];
 				isVstruct = isVstruct[0];
 				var isVstructNotice = ''
-				if (isVstruct == 'vstruct'){
-					console.log(isVstruct + " found. Do some handling here! Idea: grab the xml args file. Parse the input params of the grabbed file. Match with the xml args outputs of editorJSON.nodes[conn.node].name")
-					isVstructNotice = "##Need vstruct handling !\n"
-				}
-				if (conn) {
-				connString = connString + isVstructNotice + "\t\"reference " + mkeys[j] + "\" [\"" + editorJSON.nodes[conn.node].name + conn.node + ":" + conn.output +"\"]\n"
+				if (InputConnections) { //Current input node has input connections
+					
+					if (isVstruct == 'vstruct'){ // Current input node has input connections AND is a vstruct.
+						isVstructNotice = "\n\t##Need vstruct handling !! reference " + mkeys[j] + "\" [\"" + editorJSON.nodes[InputConnections.node].name + InputConnections.node + ":" + InputConnections.output +"\"]\n"
+						
+						var potentialVstructOutput = PxrJSON[editorJSON.nodes[InputConnections.node].name].args.output 
+						
+						for(var k = 0; k < potentialVstructOutput.length; k++) {
+							
+							if (potentialVstructOutput[k]["@attributes"].vstructmember){
+								
+								var currentOutputVstructMemberName = potentialVstructOutput[k]["@attributes"].vstructmember.split(".");
+								currentOutputVstructMemberName = currentOutputVstructMemberName[0]
+								
+								if (currentOutputVstructMemberName == InputConnections.output){ //In the case we have more then 1 vstruct output nodes, we need to be sure to only go through those to which we are currently connected.
+									if (evaluateVstructConditionalExpr(potentialVstructOutput[k]["@attributes"].vstructConditionalExpr, editorJSON.nodes[InputConnections.node])) {// evaluate the vstructConditionalExpr formula of the actual instance of PxrXmlArgs which is "sending"
+										//console.log(potentialVstructOutput[k]["@attributes"].vstructConditionalExpr)
+										
+										var vstructmemberSecondPart = potentialVstructOutput[k]["@attributes"].vstructmember.split(".");
+										vstructmemberSecondPart = vstructmemberSecondPart[1]
+										
+										if (PxrJSON[editorJSON.nodes[i].name].args.param.filter(x => x["@attributes"].vstructmember === currentNodeName + "." + vstructmemberSecondPart).length > 0) { //check if for the actual sending virtual connection there is an input existing.
+											//console.log(JSON.stringify(PxrJSON.PxrLayerMixer.args.param.filter(x => x["@attributes"].vstructmember === currentNodeName + "." + vstructmemberSecondPart)))
+											//console.log(currentNodeName + "." + vstructmemberSecondPart)
+											console.log(editorJSON.nodes[i].name)
+											var filterJson = PxrJSON.PxrLayerMixer.args.param.filter(x => x["@attributes"].vstructmember === currentNodeName + "." + vstructmemberSecondPart);
+											//console.log(filterJson[0]["@attributes"].name)
+											isVstructNotice = isVstructNotice + "\t\"reference " + filterJson[0]["@attributes"].type + " " + filterJson[0]["@attributes"].name + "\" [\"" + editorJSON.nodes[InputConnections.node].name + InputConnections.node + ":" + potentialVstructOutput[k]["@attributes"].name +"\"]\n"
+										} else if (PxrJSON[editorJSON.nodes[i].name].args.page.filter(x => x["@attributes"].vstructmember === currentNodeName + "." + vstructmemberSecondPart).length > 0) { //PxrLayerSurface has a slightly different XML dialect and has a page tag for some!! param..... ouch
+											
+										}
+									}
+								}
+							}
+						}
+						//console.log(PxrJSON[editorJSON.nodes[InputConnections.node].name]);
+						connString = connString + isVstructNotice
+						continue;
+					}
+					
+					
+				connString = connString  + "\t\"reference " + mkeys[j] + "\" [\"" + editorJSON.nodes[InputConnections.node].name + InputConnections.node + ":" + InputConnections.output +"\"]\n"
 				}
 			}
 			
 			outputRib = outputRib + PatternString + dataNodes + connString
 			
-		console.log("\n")
 		outputRib = outputRib + "\n"
 		}
 	outputRib = "#Slim Shady Material\n" + outputRib + JSON.stringify(editorJSON, null, "\t");
@@ -595,7 +553,7 @@ class PxrLayerComponent extends Rete.Component {
 })();
 
 
-// Changes XML to JSON
+// converts XML to JSON
 function xmlToJson(xml) {
 	
 	// Create the return object
@@ -633,4 +591,8 @@ function xmlToJson(xml) {
 	}
 	return obj;
 };
+
+function evaluateVstructConditionalExpr(vstructConditionalExprString, editorJSONnodes) {
+	return true
+}
 
