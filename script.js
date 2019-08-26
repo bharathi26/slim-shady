@@ -103,6 +103,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 				PxrParams = xmlDoc.getElementsByTagName("param");
 				PxrOutputs = xmlDoc.getElementsByTagName("output");
 				PxrShaderType = xmlDoc.getElementsByTagName("shaderType")[0].getElementsByTagName("tag")[0].getAttribute("value")
+				PxrShaderType = PxrShaderType[0].toUpperCase() + PxrShaderType.slice(1); //Capitalize 1st letter.
 			}
 		}
 		xhr.open('GET', "https://raw.githubusercontent.com/sttng/LDD/master/args/" + this.text + ".args", false);
@@ -597,7 +598,8 @@ function xmlToJson(xml) {
 };
 
 function evaluateVstructConditionalExpr(vstructConditionalExprString, editorJSONnodes) {
-	console.log(vstructConditionalExprString);
+	//highlighter = compileExpression(vstructConditionalExprString); // <-- Filtrex!
+	//console.log(highlighter);
 	return true
 }
 
