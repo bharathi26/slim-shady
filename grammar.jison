@@ -75,7 +75,7 @@ op
     ;
 
 expr
-    : t_PARAM op value -> {expr: [$1, $2, $3]}
+    : t_PARAM op value { $$ = {param: $1}; }
     | t_OP_AND op value
     | t_OP_OR op value
     | t_OP_IS op value
@@ -90,7 +90,7 @@ expr
     | t_PARAM t_OP_ISNOT t_KW_CONNECTED
     | t_PARAM t_OP_IS t_KW_SET
     | t_PARAM t_OP_ISNOT t_KW_SET
-    | t_LPAR expr t_RPAR { $$ = {op: 'PAR', expr:$2}; }
+    | t_LPAR expr t_RPAR { $$ = {op: 'PAR', expr: $2}; }
     | expr t_OP_AND expr { $$ = {op: 'AND', left: $1, right: $3}; }
     | expr t_OP_OR expr { $$ = {op: 'OR', left: $1, right: $3}; }
     ;
