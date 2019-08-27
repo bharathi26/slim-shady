@@ -59,29 +59,22 @@
 
 %% /* language grammar */
 
-expressions
-    : statement EOF
-        { return { "The Vstruct ConditionalExprString is valid" : $1 }; }
-    ;
-
 value 
     : t_STRING
-    | t_NUMBER
-        { $$ = { value: $1 } }
+    | t_NUMBER { $$ = { value: $1 } }
     ;
 
 op 
-    : t_OP_EQ
-    | t_OP_NOTEQ
-    | t_OP_GT
-    | t_OP_LT
-    | t_OP_GTEQ
-    | t_OP_LTEQ
-        { $$ = { op: $1 } }
+    : t_OP_EQ { $$ = { op: $1 } }
+    | t_OP_NOTEQ { $$ = { op: $1 } }
+    | t_OP_GT { $$ = { op: $1 } }
+    | t_OP_LT { $$ = { op: $1 } }
+    | t_OP_GTEQ { $$ = { op: $1 } }
+    | t_OP_LTEQ { $$ = { op: $1 } }
     ;
 
 expr
-    : t_PARAM op value
+    : t_PARAM op value -> {expr: [$t_PARAM, $op, $value]}
     | t_OP_AND op value
     | t_OP_OR op value
     | t_OP_IS op value
@@ -92,13 +85,12 @@ expr
     | t_KW_IGNORE op value
     | t_KW_COPY op value
     | t_KW_SET op value
-        { $$ = { value: $3 } }
-    | t_PARAM t_OP_IS t_KW_CONNECTED
+    | t_PARAM t_OP_IS t_KW_CONNECTED -> {expr: [$t_PARAM, $t_OP_IS, $t_KW_CONNECTED]}
     | t_PARAM t_OP_ISNOT t_KW_CONNECTED
     | t_PARAM t_OP_IS t_KW_SET
     | t_PARAM t_OP_ISNOT t_KW_SET
     | t_LPAR expr t_RPAR
-    | expr t_OP_AND expr
+    | expr t_OP_AND expr -> {expr: [$expr, $t_OP_AND, $expr]}
     | expr t_OP_OR expr
     ;
 
@@ -107,14 +99,17 @@ action
     | t_KW_CONNECT
     | t_KW_IGNORE
     | t_KW_SET t_STRING
-    | t_KW_SET t_NUMBER
+    | t_KW_SET t_NUMBER -> {action: [$t_KW_SET, $t_NUMBER]}
     ;
 
 statement 
-    : action t_KW_IF expr t_KW_ELSE action
-    | action t_KW_IF expr
+    : action t_KW_IF expr t_KW_ELSE action -> {statement: [$1, $2, $3, $4, $5]}
+    | action t_KW_IF expr -> {statement: [$action, $t_KW_IF, $expr]}
     | t_KW_IF expr t_KW_ELSE action
-    | action
-    | expr
-        { $$ = { here: $1 } }
+    | action -> {statement: [$action]}
+    | expr { $$ = { here: $1 } }
+    ;
+
+expressions
+    : statement EOF {return $1;}
     ;
