@@ -1,5 +1,6 @@
-
-/* description: Parses end executes mathematical expressions. */
+/*
+ * RenderMan Vstruct Conditional Expressions Jison parser grammar rules
+ */
 
 /* lexical grammar */
 %lex
@@ -7,7 +8,9 @@
 
 \s+                   /* skip whitespace */
 
-/* # Regular expression rules for simple tokens */
+/*# regex for simple tokens
+ #
+ # Regular expression rules for simple tokens*/
 
 "("                   return 't_LPAR'
 ")"                   return 't_RPAR'
@@ -23,8 +26,6 @@
 "connect"             return 't_KW_CONNECT'
 "ignore"              return 't_KW_IGNORE'
 "copy"                return 't_KW_COPY'
-/* t_STRING = r'"\w+"' */
-
 
 
 /* # regex rule with action code */
@@ -37,10 +38,11 @@
 "set"                 return 't_KW_SET'
 
 \w+                   return 't_PARAM'
+"\w+"                 return 't_STRING'
+
 
 <<EOF>>               return 'EOF'
 .                     return 'INVALID'
-
 
 
 /lex
@@ -58,16 +60,61 @@
 %% /* language grammar */
 
 expressions
-    : song
-        { return { song: $1 }; }
+    : statement EOF
+        { return { "The Vstruct ConditionalExprString is valid" : $1 }; }
     ;
 
-song
-    : t_KW_IF PARAM t_OP_IS
-        { $$ = $PARAM; }
+value 
+    : t_STRING
+    | t_NUMBER
+        { $$ = { value: $1 } }
     ;
 
-PARAM
-    : t_PARAM
-        { $$ = yytext; }
+op 
+    : t_OP_EQ
+    | t_OP_NOTEQ
+    | t_OP_GT
+    | t_OP_LT
+    | t_OP_GTEQ
+    | t_OP_LTEQ
+        { $$ = { op: $1 } }
+    ;
+
+expr
+    : t_PARAM op value
+    | t_OP_AND op value
+    | t_OP_OR op value
+    | t_OP_IS op value
+    | t_KW_IF op value
+    | t_KW_ELSE op value
+    | t_KW_CONNECTED op value
+    | t_KW_CONNECT op value
+    | t_KW_IGNORE op value
+    | t_KW_COPY op value
+    | t_KW_SET op value
+        { $$ = { value: $3 } }
+    | t_PARAM t_OP_IS t_KW_CONNECTED
+    | t_PARAM t_OP_ISNOT t_KW_CONNECTED
+    | t_PARAM t_OP_IS t_KW_SET
+    | t_PARAM t_OP_ISNOT t_KW_SET
+    | t_LPAR expr t_RPAR
+    | expr t_OP_AND expr
+    | expr t_OP_OR expr
+    ;
+
+action 
+    : t_KW_COPY t_PARAM
+    | t_KW_CONNECT
+    | t_KW_IGNORE
+    | t_KW_SET t_STRING
+    | t_KW_SET t_NUMBER
+    ;
+
+statement 
+    : action t_KW_IF expr t_KW_ELSE action
+    | action t_KW_IF expr
+    | t_KW_IF expr t_KW_ELSE action
+    | action
+    | expr
+        { $$ = { here: $1 } }
     ;
