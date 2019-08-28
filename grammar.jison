@@ -1,6 +1,19 @@
 /*
  * RenderMan Vstruct Conditional Expressions Jison parser grammar rules
  * loosely based on: https://github.com/agershun/WebSQLShim/blob/master/src/sqliteparser.js
+ * Examples:
+ 
+ connect if underMaterial_singlescatterK > 0 
+         or (enableSinglescatter == 1 and (singlescatterK > 0 
+         or singlescatterK is connected or singlescatterDirectGain > 0 
+         or singlescatterDirectGain is connected))
+
+ connect if ((rrReflectionK is connected or rrReflectionK > 0) 
+         and enableRR == 1) or 
+         underMaterial_walterReflectionK is connected 
+         else set 0
+
+ connect if enableClearcoat == 1 
  */
 
 /* lexical grammar */
@@ -114,20 +127,16 @@ action
 statement 
     : action t_KW_IF expr t_KW_ELSE action 
         { $$ = {statement: $1, op: 'IFELSE', left: $3, right: $5 }}
-
     | action t_KW_IF expr 
         { $$ = {statement: $1, op: 'IF', left: $3 }}
-
     | t_KW_IF expr t_KW_ELSE action 
         { $$ = {statement: $1,  op: 'IFELSE', left: $2, right: $4 }}
-
     | action 
         { $$ = {statement: $1 }}
-
     | expr 
         -> {statement: $1}
     ;
 
 expressions
-    : statement EOF {return $1}
+    : statement EOF {return $1;}
     ;
