@@ -67,16 +67,16 @@ value
     ;
 
 op 
-    : t_OP_EQ { $$ = 'EQ' }
-    | t_OP_NOTEQ { $$ = 'NOTEQ' }
-    | t_OP_GT { $$ = 'GT' }
-    | t_OP_LT { $$ = 'LT' }
-    | t_OP_GTEQ { $$ = 'GTEQ' }
-    | t_OP_LTEQ { $$ = 'LTEQ' }
+    : t_OP_EQ { $$ = 'EQ'}
+    | t_OP_NOTEQ { $$ = 'NOTEQ'}
+    | t_OP_GT { $$ = 'GT'}
+    | t_OP_LT { $$ = 'LT'}
+    | t_OP_GTEQ { $$ = 'GTEQ'}
+    | t_OP_LTEQ { $$ = 'LTEQ'}
     ;
 
 expr
-    : t_PARAM op value { $$ = {op: $2, param: $1, right: $3}; }
+    : t_PARAM op value { $$ = {op: $2, param: $1, right: $3}}
     | t_OP_AND op value
     | t_OP_OR op value
     | t_OP_IS op value
@@ -88,46 +88,46 @@ expr
     | t_KW_COPY op value
     | t_KW_SET op value
     | t_PARAM t_OP_IS t_KW_CONNECTED 
-        { $$ = {op: 'IS', param: $1, right: $3}; }
+        { $$ = {op: 'IS', param: $1, right: $3}}
     | t_PARAM t_OP_ISNOT t_KW_CONNECTED 
-        { $$ = {op: 'ISNOT', param: $1, right: $3}; }
+        { $$ = {op: 'ISNOT', param: $1, right: $3}}
     | t_PARAM t_OP_IS t_KW_SET 
-        { $$ = {op: 'IS', param: $1, right: $3}; }
+        { $$ = {op: 'IS', param: $1, right: $3}}
     | t_PARAM t_OP_ISNOT t_KW_SET 
-        { $$ = {op: 'ISNOT', param: $1, right: $3}; }
+        { $$ = {op: 'ISNOT', param: $1, right: $3}}
     | t_LPAR expr t_RPAR 
         { $$ = {op: 'PAR', expr: $2}; }
     | expr t_OP_AND expr 
-        { $$ = {op: 'AND', left: $1, right: $3}; }
+        { $$ = {op: 'AND', left: $1, right: $3}}
     | expr t_OP_OR expr 
-        { $$ = {op: 'OR', left: $1, right: $3}; }
+        { $$ = {op: 'OR', left: $1, right: $3}}
     ;
 
 action 
-    : t_KW_COPY t_PARAM { $$ = {action: $1, param: $2 } }
+    : t_KW_COPY t_PARAM { $$ = {action: $1, param: $2 }}
     | t_KW_CONNECT { $$ = {action: $1 } }
     | t_KW_IGNORE { $$ = {action: $1 } }
-    | t_KW_SET t_STRING { $$ = {action: $1, value: $2 } }
-    | t_KW_SET t_NUMBER { $$ = {action: $1, value: $2 } }
+    | t_KW_SET t_STRING { $$ = {action: $1, value: $2 }}
+    | t_KW_SET t_NUMBER { $$ = {action: $1, value: $2 }}
     ;
 
 statement 
     : action t_KW_IF expr t_KW_ELSE action 
-        { $$ = {statement: $1, op: 'IFELSE', left: $3, right: $5 } }
+        { $$ = {statement: $1, op: 'IFELSE', left: $3, right: $5 }}
 
     | action t_KW_IF expr 
-        { $$ = {statement: $1, op: 'IF', left: $3 } }
+        { $$ = {statement: $1, op: 'IF', left: $3 }}
 
     | t_KW_IF expr t_KW_ELSE action 
-        { $$ = {statement: $1,  op: 'IFELSE', left: $2, right: $4 } }
+        { $$ = {statement: $1,  op: 'IFELSE', left: $2, right: $4 }}
 
     | action 
-        { $$ = {statement: $1 } }
+        { $$ = {statement: $1 }}
 
     | expr 
         -> {statement: $1}
     ;
 
 expressions
-    : statement EOF {return $1;}
+    : statement EOF {return $1}
     ;
