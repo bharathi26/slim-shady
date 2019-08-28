@@ -61,13 +61,13 @@
 
 
 value 
-    : t_STRING { $$ = {type:'string', string: $1}}
-    | t_NUMBER { $$ = {type:'number', number:$1}; }
+    : t_STRING { $$ = {string: $1}}
+    | t_NUMBER { $$ = {number: $1}}
     ;
 
 op 
-    : t_OP_EQ { $$ = { op: $1 } }
-    | t_OP_NOTEQ { $$ = { op: $1 } }
+    : t_OP_EQ { $$ = 'IS' }
+    | t_OP_NOTEQ { $$ = 'ISNOT' }
     | t_OP_GT { $$ = { op: $1 } }
     | t_OP_LT { $$ = { op: $1 } }
     | t_OP_GTEQ { $$ = { op: $1 } }
@@ -75,7 +75,7 @@ op
     ;
 
 expr
-    : t_PARAM op value { $$ = {param: $1}; }
+    : t_PARAM op value { $$ = {op: $2, param: $1, right: $3}; }
     | t_OP_AND op value
     | t_OP_OR op value
     | t_OP_IS op value
@@ -86,29 +86,38 @@ expr
     | t_KW_IGNORE op value
     | t_KW_COPY op value
     | t_KW_SET op value
-    | t_PARAM t_OP_IS t_KW_CONNECTED -> {expr: [$t_PARAM, $t_OP_IS, $t_KW_CONNECTED]}
-    | t_PARAM t_OP_ISNOT t_KW_CONNECTED
-    | t_PARAM t_OP_IS t_KW_SET
-    | t_PARAM t_OP_ISNOT t_KW_SET
-    | t_LPAR expr t_RPAR { $$ = {op: 'PAR', expr: $2}; }
-    | expr t_OP_AND expr { $$ = {op: 'AND', left: $1, right: $3}; }
-    | expr t_OP_OR expr { $$ = {op: 'OR', left: $1, right: $3}; }
+    | t_PARAM t_OP_IS t_KW_CONNECTED 
+        { $$ = {op: 'IS', param: $1, right: $3}; }
+    | t_PARAM t_OP_ISNOT t_KW_CONNECTED 
+        { $$ = {op: 'ISNOT', param: $1, right: $3}; }
+    | t_PARAM t_OP_IS t_KW_SET 
+        { $$ = {op: 'IS', param: $1, right: $3}; }
+    | t_PARAM t_OP_ISNOT t_KW_SET 
+        { $$ = {op: 'ISNOT', param: $1, right: $3}; }
+    | t_LPAR expr t_RPAR 
+        { $$ = {op: 'PAR', expr: $2}; }
+    | expr t_OP_AND expr 
+        { $$ = {op: 'AND', left: $1, right: $3}; }
+    | expr t_OP_OR expr 
+        { $$ = {op: 'OR', left: $1, right: $3}; }
     ;
 
 action 
-    : t_KW_COPY t_PARAM
-    | t_KW_CONNECT
-    | t_KW_IGNORE
-    | t_KW_SET t_STRING
-    | t_KW_SET t_NUMBER -> {action: [$t_KW_SET, $t_NUMBER]}
+    : t_KW_COPY t_PARAM { $$ = {action: $1, param: $2 } }
+    | t_KW_CONNECT  { $$ = {action: $1 } }
+    | t_KW_IGNORE { $$ = {action: $1 } }
+    | t_KW_SET t_STRING { $$ = {action: $1, value: $2 } }
+    | t_KW_SET t_NUMBER { $$ = {action: $1, value: $2 } }
     ;
 
 statement 
     : action t_KW_IF expr t_KW_ELSE action -> {statement: [$1, $2, $3, $4, $5]}
     | action t_KW_IF expr -> {statement: [$action, $t_KW_IF, $expr]}
     | t_KW_IF expr t_KW_ELSE action
-    | action -> {statement: [$action]}
-    | expr { $$ = { here: $1 } }
+    | action 
+        { $$ = {statement: $1 } }
+    | expr 
+        -> {statement: $1}
     ;
 
 expressions
