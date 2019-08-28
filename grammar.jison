@@ -127,8 +127,7 @@ action
     : t_KW_COPY t_PARAM { $$ = {action: $1, param: $2}}
     | t_KW_CONNECT { $$ = {action: $1}}
     | t_KW_IGNORE { $$ = {action: $1}}
-    | t_KW_SET t_STRING { $$ = {action: $1, value: $2}}
-    | t_KW_SET t_NUMBER { $$ = {action: $1, value: $2}}
+    | t_KW_SET value{ $$ = {action: $1, value: $2}}
     ;
 
 statement
