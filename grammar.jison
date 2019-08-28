@@ -73,7 +73,7 @@
 %right 't_OP_NOTEQ'
 
 
-%start expressions
+%start expressions /* starting rule / point of the grammar */
 
 %% /* language grammar */
 
