@@ -1,7 +1,8 @@
 /*
  * RenderMan Vstruct Conditional Expressions Jison parser grammar rules
  * loosely based on: https://github.com/agershun/WebSQLShim/blob/master/src/sqliteparser.js
- * Examples:
+ *
+ * Example Expressions:
  
  connect if underMaterial_singlescatterK > 0 
          or (enableSinglescatter == 1 and (singlescatterK > 0 
@@ -14,7 +15,10 @@
          else set 0
 
  connect if enableClearcoat == 1 
+ 
+ set 1.0 if enableRR == 1 else set 0.0
  */
+
 
 /* lexical grammar */
 %lex
