@@ -1,5 +1,6 @@
 /*
  * RenderMan Vstruct Conditional Expressions Jison parser grammar rules
+ * loosely based on: https://github.com/agershun/WebSQLShim/blob/master/src/sqliteparser.js
  */
 
 /* lexical grammar */
@@ -66,12 +67,12 @@ value
     ;
 
 op 
-    : t_OP_EQ { $$ = 'IS' }
-    | t_OP_NOTEQ { $$ = 'ISNOT' }
-    | t_OP_GT { $$ = { op: $1 } }
-    | t_OP_LT { $$ = { op: $1 } }
-    | t_OP_GTEQ { $$ = { op: $1 } }
-    | t_OP_LTEQ { $$ = { op: $1 } }
+    : t_OP_EQ { $$ = 'EQ' }
+    | t_OP_NOTEQ { $$ = 'NOTEQ' }
+    | t_OP_GT { $$ = 'GT' }
+    | t_OP_LT { $$ = 'LT' }
+    | t_OP_GTEQ { $$ = 'GTEQ' }
+    | t_OP_LTEQ { $$ = 'LTEQ' }
     ;
 
 expr
@@ -104,18 +105,25 @@ expr
 
 action 
     : t_KW_COPY t_PARAM { $$ = {action: $1, param: $2 } }
-    | t_KW_CONNECT  { $$ = {action: $1 } }
+    | t_KW_CONNECT { $$ = {action: $1 } }
     | t_KW_IGNORE { $$ = {action: $1 } }
     | t_KW_SET t_STRING { $$ = {action: $1, value: $2 } }
     | t_KW_SET t_NUMBER { $$ = {action: $1, value: $2 } }
     ;
 
 statement 
-    : action t_KW_IF expr t_KW_ELSE action -> {statement: [$1, $2, $3, $4, $5]}
-    | action t_KW_IF expr -> {statement: [$action, $t_KW_IF, $expr]}
-    | t_KW_IF expr t_KW_ELSE action
+    : action t_KW_IF expr t_KW_ELSE action 
+        { $$ = {statement: $1, op: 'IFELSE', left: $3, right: $5 } }
+
+    | action t_KW_IF expr 
+        { $$ = {statement: $1, op: 'IF', left: $3 } }
+
+    | t_KW_IF expr t_KW_ELSE action 
+        { $$ = {statement: $1,  op: 'IFELSE', left: $2, right: $4 } }
+
     | action 
         { $$ = {statement: $1 } }
+
     | expr 
         -> {statement: $1}
     ;
