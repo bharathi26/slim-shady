@@ -137,7 +137,7 @@ statement
     | action t_KW_IF expr 
         { $$ = {statement: $1, op: 'IF', left: $3}}
     | t_KW_IF expr t_KW_ELSE action 
-        { $$ = {statement: $1,  op: 'IFELSE', left: $2, right: $4}}
+        { $$ = {statement: $1, op: 'IFELSE', left: $2, right: $4}}
     | action 
         { $$ = {statement: $1 }}
     | expr 
