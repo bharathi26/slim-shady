@@ -436,10 +436,10 @@ class PxrXmlArgsComponent extends Rete.Component {
 	
 	
 	var PxrWireframe = await components[59].createNode({ 
-	"color wireframeColor": "0 0 0",
-	"color backgroundColor": "1 1 1",
-	"float wireframeOpacity": "1",
-	"float wireframeWidth": "2"
+	"color wireColor": "0 0 0",
+	"color backColor": "1 1 1",
+	"float wireOpacity": "1",
+	"float wireWidth": "2"
 	});
 	
 	var PxrWireLayer = await components[64].createNode({ 
@@ -600,6 +600,7 @@ function xmlToJson(xml) {
 function evaluateVstructConditionalExpr(vstructConditionalExprString, editorJSONnodes) {
 	//highlighter = compileExpression(vstructConditionalExprString); // <-- Filtrex!
 	//console.log(highlighter);
+	console.log(vstructConditionalExprString);
 	return true
 }
 
