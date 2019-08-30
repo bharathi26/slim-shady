@@ -30,7 +30,7 @@
     <h1>Jison Online Tester</h1>
     <p>Load example:</p>
 
-    <textarea id="grammar" rows="20" cols="150" style="height:400px;width:100%;font-size:12px;font-family:monospace;">
+    <textarea id="grammar" rows="20" cols="150" style="height:300px;width:100%;font-size:12px;font-family:monospace;">
 /* grammar here */
     </textarea>
     <p>
@@ -44,7 +44,15 @@
     <div id="table"></div>
 
     <div id="parsing">
-      <h2>Test Parser</h2>
+      <h3>Test Parser</h3>
+	  <p>
+	  Example Material:<br>
+	  enableClearcoat = "1";<br>
+	  enableRR = "0";<br>
+	  rrReflectionK = "connected";<br>
+	  singlescatterK = "not_connected";<br>
+	  singlescatterDirectGain = "0.92";
+	  </p>
       <textarea id="source" rows="4" cols="150" style="width:100%;font-size:12px;font-family:monospace;">
 connect if ((rrReflectionK is connected or rrReflectionK > 0) 
          and enableRR == 1) or 
