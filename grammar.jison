@@ -1,6 +1,7 @@
 /*
  * RenderMan Vstruct Conditional Expressions Jison parser grammar rules
  * loosely based on: https://github.com/agershun/WebSQLShim/blob/master/src/sqliteparser.js
+ * Thanks to: http://nolanlawson.github.io/jison-debugger/
  *
  * Example Expressions:
  
