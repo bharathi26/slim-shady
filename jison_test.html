@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script src="vstructParser.js"></script>
+<h2>vstructParser Test:</h2>
+
+<p>Input</p>
+<input id="inputs" type="text" value="set 1.0 if enableRR == 1 else set 0.0" /> <button type="button" onclick="loadParser()">Parse</button> <span></span>
+<p>Outputs</p>
+<p id="outputs"></p>
+
+<script>
+
+var paramvalue = {}
+
+function loadParser() {
+
+paramvalue = {enableRR:"2", rrReflectionK:"connected", enableClearcoat:"1", singlescatterK:"connected", singlescatterDirectGain:"0.92" };
+	parser.yy = { parameval: function(t) {
+
+  	// in real world this would be db backed
+
+	console.log("DB" + paramvalue[t])
+  	return paramvalue[t];
+  }
+};
+	output = JSON.stringify(parser.parse(document.getElementById('inputs').value))
+
+	document.getElementById("outputs").innerHTML = output;
+
+}
+</script>
+
+</body>
+</html>

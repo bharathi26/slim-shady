@@ -598,9 +598,42 @@ function xmlToJson(xml) {
 };
 
 function evaluateVstructConditionalExpr(vstructConditionalExprString, editorJSONnodes) {
-	//highlighter = compileExpression(vstructConditionalExprString); // <-- Filtrex!
-	//console.log(highlighter);
-	console.log(vstructConditionalExprString);
+	var paramvalue = {}
+	var x;
+	
+	//Check if nodes are connected
+	for (x in editorJSONnodes.inputs) {
+		var key = x.split(" ");
+		key = key[1]
+		var val = editorJSONnodes.inputs[x].connections;
+		if (val.length > 0 ) {
+			//console.log("Key:"+ key + " Value:" + JSON.stringify(val))
+			paramvalue[key] = "connected"
+		}
+		else {
+			paramvalue[key] = "not_connected"
+		}
+	}
+	
+	//Get values of Nodes with data
+	for (x in editorJSONnodes.data) {
+		var key = x.split(" ");
+		key = key[1]
+		var val = editorJSONnodes.data[x];
+		console.log("Key:"+ key + " Value:" + val)
+		paramvalue[key] = val
+	}
+	
+	//paramvalue = {enableRR:"2", rrReflectionK:"connected", enableClearcoat:"1", singlescatterK:"connected", singlescatterDirectGain:"0.92", bumpNormal:"connected"};
+	parser.yy = { parameval: function(t) {
+		console.log("Param: " + t + " Value: " + paramvalue[t])
+		return paramvalue[t];
+	}
+	};
+	
+	output = JSON.stringify(parser.parse(vstructConditionalExprString))
+	//console.log(JSON.stringify(editorJSONnodes.inputs))
+	console.log("VStruct: " + vstructConditionalExprString + " Output: " + output);
 	return true
 }
 
