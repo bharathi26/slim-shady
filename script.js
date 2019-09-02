@@ -386,7 +386,10 @@ class PxrXmlArgsComponent extends Rete.Component {
 								currentOutputVstructMemberName = currentOutputVstructMemberName[0]
 								
 								if (currentOutputVstructMemberName == InputConnections.output){ //In the case we have more then one vstruct output nodes, we need to be sure to only go through those members to which we are currently connected.
-									if (evaluateVstructConditionalExpr(potentialVstructOutput[k]["@attributes"].vstructConditionalExpr, editorJSON.nodes[InputConnections.node])) {// evaluate the vstructConditionalExpr formula of the actual instance of PxrXmlArgs which is "sending"
+									
+									var evalVstructAction = evaluateVstructConditionalExpr(potentialVstructOutput[k]["@attributes"].vstructConditionalExpr, editorJSON.nodes[InputConnections.node]) // evaluate the vstructConditionalExpr formula of the actual instance of PxrXmlArgs which is "sending"
+									
+									if (evalVstructAction["action"] == "connect") {
 										//console.log(potentialVstructOutput[k]["@attributes"].vstructConditionalExpr)
 										
 										var vstructmemberSecondPart = potentialVstructOutput[k]["@attributes"].vstructmember.split(".");
@@ -408,6 +411,30 @@ class PxrXmlArgsComponent extends Rete.Component {
 										else if (PxrJSON[editorJSON.nodes[i].name].args.page.filter(x => x["@attributes"].vstructmember === currentNodeName + "." + vstructmemberSecondPart).length > 0) { //PxrLayerSurface has a slightly different XML dialect and has a page tag for some!! param..... ouch
 											
 										}
+									}
+									
+									else if (evalVstructAction["action"] == "set") {
+										console.log (evalVstructAction["value"])
+										var vstructmemberSecondPart = potentialVstructOutput[k]["@attributes"].vstructmember.split(".");
+										vstructmemberSecondPart = vstructmemberSecondPart[1]
+										
+										//dirty loop to push the params below or under page item down to the "normal" params
+										for (var m = 0; m < PxrJSON[editorJSON.nodes[i].name].args.page.length; m++) {
+											for (var n = 0; n < PxrJSON[editorJSON.nodes[i].name].args.page[m].param.length; n++) {
+												PxrJSON[editorJSON.nodes[i].name].args.param.push(PxrJSON[editorJSON.nodes[i].name].args.page[m].param[n])
+											}
+										}
+										
+										var filteredPxrJSON = PxrJSON[editorJSON.nodes[i].name].args.param.filter(x => x["@attributes"].vstructmember === currentNodeName + "." + vstructmemberSecondPart); //check if for the actual sending virtual connection there is an input existing.
+										if (filteredPxrJSON.length > 0) {
+											//console.log(filteredPxrJSON[0]["@attributes"].name)
+											isVstructNotice = isVstructNotice + "\t\"" + filteredPxrJSON[0]["@attributes"].type + " " + filteredPxrJSON[0]["@attributes"].name + "\" [\"" + evalVstructAction["value"] +"\"]\n"
+										}
+										
+										else if (PxrJSON[editorJSON.nodes[i].name].args.page.filter(x => x["@attributes"].vstructmember === currentNodeName + "." + vstructmemberSecondPart).length > 0) { //PxrLayerSurface has a slightly different XML dialect and has a page tag for some!! param..... ouch
+											
+										}
+										
 									}
 								}
 							}
@@ -620,20 +647,20 @@ function evaluateVstructConditionalExpr(vstructConditionalExprString, editorJSON
 		var key = x.split(" ");
 		key = key[1]
 		var val = editorJSONnodes.data[x];
-		console.log("Key:"+ key + " Value:" + val)
+		//console.log("Key:"+ key + " Value:" + val)
 		paramvalue[key] = val
 	}
 	
 	//paramvalue = {enableRR:"2", rrReflectionK:"connected", enableClearcoat:"1", singlescatterK:"connected", singlescatterDirectGain:"0.92", bumpNormal:"connected"};
 	parser.yy = { parameval: function(t) {
-		console.log("Param: " + t + " Value: " + paramvalue[t])
+		//console.log("Param: " + t + " Value: " + paramvalue[t])
 		return paramvalue[t];
 	}
 	};
 	
-	output = JSON.stringify(parser.parse(vstructConditionalExprString))
+	output = parser.parse(vstructConditionalExprString)
 	//console.log(JSON.stringify(editorJSONnodes.inputs))
-	console.log("VStruct: " + vstructConditionalExprString + " Output: " + output);
-	return true
+	console.log("VStruct: " + vstructConditionalExprString + " Output: " + JSON.stringify(output));
+	return output
 }
 
