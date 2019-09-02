@@ -388,9 +388,9 @@ class PxrXmlArgsComponent extends Rete.Component {
 								if (currentOutputVstructMemberName == InputConnections.output){ //In the case we have more then one vstruct output nodes, we need to be sure to only go through those members to which we are currently connected.
 									
 									var evalVstructAction = evaluateVstructConditionalExpr(potentialVstructOutput[k]["@attributes"].vstructConditionalExpr, editorJSON.nodes[InputConnections.node]) // evaluate the vstructConditionalExpr formula of the actual instance of PxrXmlArgs which is "sending"
+									console.log(JSON.stringify(potentialVstructOutput[k]))
 									
 									if (evalVstructAction["action"] == "connect") {
-										//console.log(potentialVstructOutput[k]["@attributes"].vstructConditionalExpr)
 										
 										var vstructmemberSecondPart = potentialVstructOutput[k]["@attributes"].vstructmember.split(".");
 										vstructmemberSecondPart = vstructmemberSecondPart[1]
@@ -414,7 +414,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 									}
 									
 									else if (evalVstructAction["action"] == "set") {
-										console.log (evalVstructAction["value"])
+									
 										var vstructmemberSecondPart = potentialVstructOutput[k]["@attributes"].vstructmember.split(".");
 										vstructmemberSecondPart = vstructmemberSecondPart[1]
 										
@@ -428,7 +428,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 										var filteredPxrJSON = PxrJSON[editorJSON.nodes[i].name].args.param.filter(x => x["@attributes"].vstructmember === currentNodeName + "." + vstructmemberSecondPart); //check if for the actual sending virtual connection there is an input existing.
 										if (filteredPxrJSON.length > 0) {
 											//console.log(filteredPxrJSON[0]["@attributes"].name)
-											isVstructNotice = isVstructNotice + "\t\"" + filteredPxrJSON[0]["@attributes"].type + " " + filteredPxrJSON[0]["@attributes"].name + "\" [\"" + evalVstructAction["value"] +"\"]\n"
+											isVstructNotice = isVstructNotice + "\t\"" + filteredPxrJSON[0]["@attributes"].type + " " + filteredPxrJSON[0]["@attributes"].name + "\" [" + evalVstructAction["value"] +"]\n"
 										}
 										
 										else if (PxrJSON[editorJSON.nodes[i].name].args.page.filter(x => x["@attributes"].vstructmember === currentNodeName + "." + vstructmemberSecondPart).length > 0) { //PxrLayerSurface has a slightly different XML dialect and has a page tag for some!! param..... ouch
@@ -487,6 +487,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 	});
 	
 	var PxrLayer1 = await components[64].createNode({ 
+	"int enableDiffuseAlways" : "1",
 	"float diffuseGain": "1.0",
 	"color diffuseColor": "0.94 0.2 0.25",
 	"int diffuseDoubleSided": "1",
