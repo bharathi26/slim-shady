@@ -509,7 +509,6 @@ class PxrXmlArgsComponent extends Rete.Component {
 	
 	var PxrLayerMixer = await components[65].createNode({ 
 	"int enableDiffuseAlways": "1",
-	"int baselayer_enableDiffuse": "1",
 	"int layer1Enabled": "1"
 	});
 	
