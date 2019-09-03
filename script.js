@@ -132,6 +132,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 		var i
 		for (i = 0; i < PxrParams.length; i++) {
 			var VstructMember = PxrParams[i].getAttribute("vstructmember");
+			var WidgetMember = PxrParams[i].getAttribute("widget");
 			
 			if (VstructMember) {
 				continue; //ignore input nodes which are part of vstructs
@@ -174,7 +175,15 @@ class PxrXmlArgsComponent extends Rete.Component {
 			var checkfortags = PxrParams[i].getElementsByTagName("tag");
 			
 			var PatternInputs = new Rete.Input(patternType + " " + PxrParams[i].getAttribute("name"), patternType + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
-			PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name")));
+			
+			if (WidgetMember == "null") {
+				console.log(PxrParams[i])
+				PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true)); // User disallowed to edit Widget "Null" items 
+			}
+			
+			else {
+				PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name")));
+			}
 			node.addInput(PatternInputs)
 		}
 		
@@ -230,7 +239,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 	}
 
 	worker(node, inputs, outputs) {
-		
+		this.editor.nodes.find(n => n.id == node.id).controls.get('preview').setValue("bla"); //This doesn't work yet. Use it to prefill with default values later
 	}
 }
 
