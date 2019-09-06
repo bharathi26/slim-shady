@@ -1,5 +1,5 @@
 # Slim Shady for RenderMan
-A web-based material node editor for RenderMan. It is based on Rete.js (https://github.com/retejs/rete). Jison.js (http://zaa.ch/jison/) is used for parsing vstruct conditionals.
+A web-based material node editor for RenderMan. It is based on Rete.js (https://github.com/retejs/rete). For the parsing of VStruct conditionals Jison.js (http://zaa.ch/jison/) is used.
 
 ![Slim Shady](https://raw.githubusercontent.com/sttng/slim-shady/master/slim_shady.png)
 
@@ -11,7 +11,7 @@ A web-based material node editor for RenderMan. It is based on Rete.js (https://
 ## Requirements
 
 * Internet connection
-* Tested on Chrome 75.0.3770.100
+* Tested on Chrome 75.0.3770.100 and MacOS Safari
 
 ## License
 
