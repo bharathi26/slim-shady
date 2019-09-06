@@ -177,7 +177,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 			var PatternInputs = new Rete.Input(patternType + " " + PxrParams[i].getAttribute("name"), patternType + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
 			
 			if (WidgetMember == "null") {
-				console.log(PxrParams[i])
+				//console.log(PxrParams[i])
 				PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true)); // User disallowed to edit Widget "Null" items 
 			}
 			
@@ -467,7 +467,6 @@ class PxrXmlArgsComponent extends Rete.Component {
 	var url = window.URL.createObjectURL(data);
 
 	document.getElementById('download_link').href = url;
-	//document.getElementById("outputs").innerHTML = outputRib;
 	};
 	
 	
@@ -479,9 +478,17 @@ class PxrXmlArgsComponent extends Rete.Component {
 	};
 	
 	
-	document.getElementById("load_link").onclick = async ()=> {
-		var fileinput = document.getElementById("browse");
-		fileinput.click();
+	document.getElementById('file-input').onchange = async ()=> {
+		var file = self.document.getElementById('file-input').files[0];
+		if (!file) {return;}
+		var reader = new FileReader();
+		reader.onload = function(e) {
+			var contents = e.target.result;
+			console.log(contents); // Display file content
+
+			//editor.fromJSON(contents);
+		};
+		reader.readAsText(file);
 	};
 	
 	
