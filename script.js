@@ -471,6 +471,20 @@ class PxrXmlArgsComponent extends Rete.Component {
 	};
 	
 	
+	document.getElementById("save_link").onclick = async ()=> {
+		const savedata = JSON.stringify(editor.toJSON());
+		var data = new Blob([savedata], {type: 'text/plain'});
+		var url = window.URL.createObjectURL(data);
+		document.getElementById('save_link').href = url;
+	};
+	
+	
+	document.getElementById("load_link").onclick = async ()=> {
+		var fileinput = document.getElementById("browse");
+		fileinput.click();
+	};
+	
+	
 	var PxrWireframe = await components[59].createNode({ 
 	"color wireColor": "0 0 0",
 	"color backColor": "1 1 1",
@@ -672,4 +686,3 @@ function evaluateVstructConditionalExpr(vstructConditionalExprString, editorJSON
 	console.log("VStruct: " + vstructConditionalExprString + " Output: " + JSON.stringify(output));
 	return output
 }
-

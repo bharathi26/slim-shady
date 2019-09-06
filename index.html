@@ -61,12 +61,16 @@
 </template>
 
 <div id="rete" class="node-editor">
+<div style="position: absolute; transform: translate(10px, 10px);"><div class="node"><div class="title"><a style="color:white;" id="save_link" download="slim_shady_save.txt" href=”” >Save</a></div></div></div>
 
-<div style="position: absolute; transform: translate(10px, 10px);"><div class="node"><div class="title"><a style="color:white;" id="download_link" download="material_rib.txt" href=”” >Export RIB</a></div></div></div>
+<div style="position: absolute; transform: translate(100px, 10px);"><div class="node"><div class="title"><a style="color:white;" id="load_link">
+<input type="file" id="browse" name="fileupload" style="display: none" onChange="Handlechange();"/>Load</a></div></div></div>
+
+<div style="position: absolute; transform: translate(200px, 10px);"><div class="node"><div class="title"><a style="color:white;" id="download_link" download="material_rib.txt" href=”” >Export RIB</a></div></div></div>
 
 </div>
 
-<script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+<script src="https://code.jquery.com/pep/0.4.3/pep.js"></script> <!--Needed for OSX Safari Browser-->
 <script src='https://cdn.jsdelivr.net/npm/rete@1.4.1-rc.1/build/rete.min.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/alight@0.14.1/alight.min.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/rete-connection-plugin@0.8.2-rc.1/build/connection-plugin.min.js'></script>
@@ -80,6 +84,24 @@
 <script src='https://cdn.jsdelivr.net/npm/rete-vue-render-plugin@0.2.6/build/vue-render-plugin.min.js'></script>
 <script src="./vstructParser.js"></script>
 <script src="./script.js"></script>
+<script>
+	function Handlechange(){
+ var x = document.getElementById("browse");
+        var file = x.files[0];
+        if ('size' in file) {
+          console.log("size: " + file.size + " bytes");
+		  fileReader = new FileReader()
+		  fileReader.readAsText(file)
+		   fileReader.onload = function() {
+    // The file's text will be printed here
+    console.log(fileReader.result)
+	data = fileReader.result
+	editor.fromJSON(data);
+  };
+        }
+}
+</script>
+
 <style>
 .context-menu {
   left: 0;
