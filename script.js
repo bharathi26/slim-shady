@@ -178,7 +178,8 @@ class PxrXmlArgsComponent extends Rete.Component {
 			
 			if (WidgetMember == "null") {
 				//console.log(PxrParams[i])
-				PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true)); // User disallowed to edit Widget "Null" items 
+				PatternInputs.addControl(new NumControl(this.editor, 'preview', true)); // User disallowed to edit Widget "Null" items
+				this.editor.nodes.find(n => n.id == node.id).controls.get('preview').setValue("bla")
 			}
 			
 			else {
