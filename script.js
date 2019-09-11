@@ -383,8 +383,12 @@ class PxrXmlArgsComponent extends Rete.Component {
 			for ( var j in Object.keys(editorJSON.nodes[i].data)) {
 				if (keys[j] == "PxrShaderType") {
 					 continue; // "PxrShaderType" is not a input node but stores if the current PxrXmlArgs is "pattern", "bxdf", etc. Thats why its skipped.
-				}	
-				if (editorJSON.nodes[i].data[keys[j]]) { //Add check here if Control Data is there AND an input connection also exists, in this case input connection should overrule
+				}
+				if (editorJSON.nodes[i].inputs[keys[j]].connections.length > 0){
+					console.log(editorJSON.nodes[i].inputs[keys[j]]);
+					continue;  //Check here if Control Data is there AND an input connection also exists, in this case input connection should overrule
+				}
+				if (editorJSON.nodes[i].data[keys[j]]) {
 					dataNodes = dataNodes + "\t\"" + keys[j] + "\" [" + editorJSON.nodes[i].data[keys[j]] + "]\n"
 				}
 			}
