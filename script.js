@@ -20,7 +20,7 @@ numSocket.combineWith(vectorSocket);
 
 
 var VueNumControl = {
-  props: ['readonly', 'emitter', 'ikey', 'getData', 'putData'],
+  props: ['readonly', 'defaultVal', 'emitter', 'ikey', 'getData', 'putData'],
   template: '<input type="text" :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop=""/>',
   data() {
     return {
@@ -40,16 +40,19 @@ var VueNumControl = {
   },
   mounted() {
     this.value = this.getData(this.ikey);
+	let val = this.getData(this.ikey);
+	this.value =  val === undefined ? this.defaultVal : val;
+	this.update();
   }
 }
 
 
 class NumControl extends Rete.Control {
 
-  constructor(emitter, key, readonly) {
+  constructor(emitter, key, readonly, defaultVal) {
     super(key);
     this.component = VueNumControl;
-    this.props = { emitter, ikey: key, readonly };
+    this.props = { emitter, ikey: key, readonly, defaultVal};
   }
 
   setValue(val) {
@@ -172,18 +175,19 @@ class PxrXmlArgsComponent extends Rete.Component {
 				default:
 					usedSocket = numSocket;
 			}
-			var checkfortags = PxrParams[i].getElementsByTagName("tag");
+			//var checkfortags = PxrParams[i].getElementsByTagName("tag");
 			
-			var PatternInputs = new Rete.Input(patternType + " " + PxrParams[i].getAttribute("name"), patternType + " " + PxrParams[i].getAttribute("name"), usedSocket, true);
+			
 			
 			if (WidgetMember == "null") {
-				//console.log(PxrParams[i])
-				PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true)); // User disallowed to edit Widget "Null" items
-				//this.editor.nodes.find(n => n.id == node.id).controls.get('preview1').setValue("mumumu")
+				var PatternInputs = new Rete.Input(patternType + " " + PxrParams[i].getAttribute("name"), "(-) " + patternType + " " + PxrParams[i].getAttribute("name"), usedSocket, false);
+				var myControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, PxrParams[i].getAttribute("default"))
+				PatternInputs.addControl(myControl); // User disallowed to edit Widget "Null" items 
 			}
 			
 			else {
-				PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name")));
+				var PatternInputs = new Rete.Input(patternType + " " + PxrParams[i].getAttribute("name"), patternType + " " + PxrParams[i].getAttribute("name"), usedSocket, false);
+				PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, PxrParams[i].getAttribute("default")));
 			}
 			node.addInput(PatternInputs)
 		}
@@ -238,9 +242,9 @@ class PxrXmlArgsComponent extends Rete.Component {
 	
 		return node
 	}
-
+	
 	worker(node, inputs, outputs) {
-		this.editor.nodes.find(n => n.id == node.id).controls.get('preview').setValue("bla"); //This doesn't work yet. Use it to prefill with default values later
+		//this.editor.nodes.find(n => n.id == node.id).controls.get('preview').setValue("bla");
 	}
 }
 
@@ -486,7 +490,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 		reader.onload = function(e) {
 			var contents = e.target.result;
 			console.log(contents); // Display file content
-
+			
 			//editor.fromJSON(contents);
 		};
 		reader.readAsText(file);
