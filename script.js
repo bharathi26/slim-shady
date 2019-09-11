@@ -177,17 +177,29 @@ class PxrXmlArgsComponent extends Rete.Component {
 			}
 			//var checkfortags = PxrParams[i].getElementsByTagName("tag");
 			
-			
+			var defaultVal = PxrParams[i].getAttribute("default")
 			
 			if (WidgetMember == "null") {
 				var PatternInputs = new Rete.Input(patternType + " " + PxrParams[i].getAttribute("name"), "(-) " + patternType + " " + PxrParams[i].getAttribute("name"), usedSocket, false);
-				var myControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, PxrParams[i].getAttribute("default"))
+				
+				var myControl
+				if (defaultVal != ""){
+					myControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
+				}
+				else {
+					myControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true)
+				}
 				PatternInputs.addControl(myControl); // User disallowed to edit Widget "Null" items 
 			}
 			
 			else {
 				var PatternInputs = new Rete.Input(patternType + " " + PxrParams[i].getAttribute("name"), patternType + " " + PxrParams[i].getAttribute("name"), usedSocket, false);
-				PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, PxrParams[i].getAttribute("default")));
+				if (defaultVal != ""){
+					PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+				}
+				else {
+					PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+				}
 			}
 			node.addInput(PatternInputs)
 		}
@@ -372,8 +384,9 @@ class PxrXmlArgsComponent extends Rete.Component {
 				if (keys[j] == "PxrShaderType") {
 					 continue; // "PxrShaderType" is not a input node but stores if the current PxrXmlArgs is "pattern", "bxdf", etc. Thats why its skipped.
 				}	
-				
-				dataNodes = dataNodes + "\t\"" + keys[j] + "\" [" + editorJSON.nodes[i].data[keys[j]] + "]\n"
+				if (editorJSON.nodes[i].data[keys[j]]) { //Add check here if Control Data is there AND an input connection also exists, in this case input connection should overrule
+					dataNodes = dataNodes + "\t\"" + keys[j] + "\" [" + editorJSON.nodes[i].data[keys[j]] + "]\n"
+				}
 			}
 			
 			var mkeys = Object.keys(editorJSON.nodes[i].inputs);
