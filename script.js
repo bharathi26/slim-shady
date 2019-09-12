@@ -10,6 +10,7 @@ var pointSocket = new Rete.Socket("point");
 var stringSocket = new Rete.Socket("string");
 var structSocket = new Rete.Socket("struct");
 var vectorSocket = new Rete.Socket("vector");
+var noconnectSocket = new Rete.Socket("noconnect");
 
 var numSocket = new Rete.Socket("Number");
 
@@ -46,6 +47,59 @@ var VueNumControl = {
   }
 }
 
+var VueIntControl = {
+  props: ['readonly', 'defaultVal', 'emitter', 'ikey', 'getData', 'putData'],
+  template: '<input type="number" :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop=""/>',
+  data() {
+    return {
+      value: 0,
+    }
+  },
+  methods: {
+    change(e){
+      this.value = e.target.value;
+      this.update();
+    },
+    update() {
+      if (this.ikey)
+        this.putData(this.ikey, this.value)
+      this.emitter.trigger('process');
+    }
+  },
+  mounted() {
+    this.value = this.getData(this.ikey);
+	let val = this.getData(this.ikey);
+	this.value =  val === undefined ? this.defaultVal : val;
+	this.update();
+  }
+}
+
+var VueFloatControl = {
+  props: ['readonly', 'defaultVal', 'emitter', 'ikey', 'getData', 'putData'],
+  template: '<input type="number" step="0.01" :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop=""/>',
+  data() {
+    return {
+      value: 0,
+    }
+  },
+  methods: {
+    change(e){
+      this.value = e.target.value;
+      this.update();
+    },
+    update() {
+      if (this.ikey)
+        this.putData(this.ikey, this.value)
+      this.emitter.trigger('process');
+    }
+  },
+  mounted() {
+    this.value = this.getData(this.ikey);
+	let val = this.getData(this.ikey);
+	this.value =  val === undefined ? this.defaultVal : val;
+	this.update();
+  }
+}
 
 class NumControl extends Rete.Control {
 
@@ -60,6 +114,31 @@ class NumControl extends Rete.Control {
   }
 }
 
+class IntControl extends Rete.Control {
+
+  constructor(emitter, key, readonly, defaultVal) {
+    super(key);
+    this.component = VueIntControl;
+    this.props = { emitter, ikey: key, readonly, defaultVal};
+  }
+
+  setValue(val) {
+    this.vueContext.value = val;
+  }
+}
+
+class FloatControl extends Rete.Control {
+
+  constructor(emitter, key, readonly, defaultVal) {
+    super(key);
+    this.component = VueFloatControl;
+    this.props = { emitter, ikey: key, readonly, defaultVal};
+  }
+
+  setValue(val) {
+    this.vueContext.value = val;
+  }
+}
 
 var CustomPxrXmlArgsSocket = {
   template: `<div class="socket"
@@ -147,58 +226,152 @@ class PxrXmlArgsComponent extends Rete.Component {
 				patternType = PxrParams[i].getElementsByTagName("tag")[0].getAttribute("value")
 			}
 			
-			switch (patternType) {
-				case "color":
-					usedSocket = colorSocket;
-					break;
-				case "float":
-					usedSocket = floatSocket;
-					break;
-				case "int":
-					usedSocket = intSocket;
-					break;
-				case "normal":
-					usedSocket = normalSocket;
-					break;
-				case "point":
-					usedSocket = pointSocket;
-					break;
-				case "string":
-					usedSocket = stringSocket;
-					break;
-				case "struct":
-					usedSocket = structSocket;
-					break;
-				case "vector":
-					usedSocket = vectorSocket;
-					break;
-				default:
-					usedSocket = numSocket;
+			var isConnectable = PxrParams[i].getAttribute("connectable")
+			if (isConnectable == "False") { //Nodes which are marked as "non-connectable"
+				usedSocket = noconnectSocket;
 			}
-			//var checkfortags = PxrParams[i].getElementsByTagName("tag");
+			else if (WidgetMember == "null") {
+				usedSocket = noconnectSocket;
+			}
+			else {
+			
+				switch (patternType) {
+					case "color":
+						usedSocket = colorSocket;
+						break;
+					case "float":
+						usedSocket = floatSocket;
+						break;
+					case "int":
+						usedSocket = intSocket;
+						break;
+					case "normal":
+						usedSocket = normalSocket;
+						break;
+					case "point":
+						usedSocket = pointSocket;
+						break;
+					case "string":
+						usedSocket = stringSocket;
+						break;
+					case "struct":
+						usedSocket = structSocket;
+						break;
+					case "vector":
+						usedSocket = vectorSocket;
+						break;
+					default:
+						usedSocket = numSocket;
+				}
+			}
 			
 			var defaultVal = PxrParams[i].getAttribute("default")
 			
 			if (WidgetMember == "null") {
 				var PatternInputs = new Rete.Input(patternType + " " + PxrParams[i].getAttribute("name"), "(-) " + patternType + " " + PxrParams[i].getAttribute("name"), usedSocket, false);
 				
-				var myControl
+				var usedControl
 				if (defaultVal != ""){
-					myControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
+					
+					switch (patternType) {
+						case "color":
+							usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
+							break;
+						case "float":
+							usedControl = new FloatControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
+							break;
+						case "int":
+							usedControl = new IntControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
+							break;
+						case "normal":
+							usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
+							break;
+						case "point":
+							usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
+							break;
+						case "string":
+							usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
+							break;
+						case "struct":
+							usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
+							break;
+						case "vector":
+							usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
+							break;
+						default:
+							usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
+					}
 				}
 				else {
-					myControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true)
+					usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true)
 				}
-				PatternInputs.addControl(myControl); // User disallowed to edit Widget "Null" items 
+				PatternInputs.addControl(usedControl); // User disallowed to edit Widget "Null" items 
 			}
 			
 			else {
 				var PatternInputs = new Rete.Input(patternType + " " + PxrParams[i].getAttribute("name"), patternType + " " + PxrParams[i].getAttribute("name"), usedSocket, false);
 				if (defaultVal != ""){
-					PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+					
+					switch (patternType) {
+						case "color":
+							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							break;
+						case "float":
+							PatternInputs.addControl(new FloatControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							break;
+						case "int":
+							PatternInputs.addControl(new IntControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							break;
+						case "normal":
+							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							break;
+						case "point":
+							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							break;
+						case "string":
+							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							break;
+						case "struct":
+							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							break;
+						case "vector":
+							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							break;
+						default:
+							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+					}
 				}
+				
 				else {
-					PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+					
+					switch (patternType) {
+						case "color":
+							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							break;
+						case "float":
+							PatternInputs.addControl(new FloatControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							break;
+						case "int":
+							PatternInputs.addControl(new IntControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							break;
+						case "normal":
+							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							break;
+						case "point":
+							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							break;
+						case "string":
+							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							break;
+						case "struct":
+							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							break;
+						case "vector":
+							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							break;
+						default:
+							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+					}
 				}
 			}
 			node.addInput(PatternInputs)
@@ -382,12 +555,12 @@ class PxrXmlArgsComponent extends Rete.Component {
 			var dataNodes = ''
 			for ( var j in Object.keys(editorJSON.nodes[i].data)) {
 				if (keys[j] == "PxrShaderType") {
-					 continue; // "PxrShaderType" is not a input node but stores if the current PxrXmlArgs is "pattern", "bxdf", etc. Thats why its skipped.
+					 continue; // "PxrShaderType" is not a input node but stores if the current PxrXmlArgs is "pattern", "bxdf", etc. Thats why its skipped here.
 				}
 				if (editorJSON.nodes[i].inputs[keys[j]]){
 					if (editorJSON.nodes[i].inputs[keys[j]].connections.length > 0){
 						//console.log(editorJSON.nodes[i].inputs[keys[j]]);
-						continue;//Check here if Control Data is there AND an input connection also exists, in this case input connection should overrule
+						continue;//Check here if Input Control Data from user is there AND an input connection also exists for this control. In this case input connection should overrule and not in the user entered data written to the rib.
 					}
 				}
 				if (editorJSON.nodes[i].data[keys[j]]) {
@@ -421,7 +594,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 								if (currentOutputVstructMemberName == InputConnections.output){ //In the case we have more then one vstruct output nodes, we need to be sure to only go through those members to which we are currently connected.
 									
 									var evalVstructAction = evaluateVstructConditionalExpr(potentialVstructOutput[k]["@attributes"].vstructConditionalExpr, editorJSON.nodes[InputConnections.node]) // evaluate the vstructConditionalExpr formula of the actual instance of PxrXmlArgs which is "sending"
-									console.log(JSON.stringify(potentialVstructOutput[k]))
+									//console.log(JSON.stringify(potentialVstructOutput[k]))
 									
 									if (evalVstructAction["action"] == "connect") {
 										
@@ -486,7 +659,13 @@ class PxrXmlArgsComponent extends Rete.Component {
 			
 		outputRib = outputRib + "\n"
 		}
-	outputRib = "#Slim Shady Material\n" + outputRib; // + JSON.stringify(editorJSON, null, "\t")
+	
+	var today = new Date();
+	var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+	var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+	var dateTime = date + ' ' + time;
+	
+	outputRib = "#Slim Shady Material generated on: " + dateTime + "\n\n" + outputRib;
 	var data = new Blob([outputRib], {type: 'text/plain'});
 	var url = window.URL.createObjectURL(data);
 
@@ -705,7 +884,6 @@ function evaluateVstructConditionalExpr(vstructConditionalExprString, editorJSON
 		paramvalue[key] = val
 	}
 	
-	//paramvalue = {enableRR:"2", rrReflectionK:"connected", enableClearcoat:"1", singlescatterK:"connected", singlescatterDirectGain:"0.92", bumpNormal:"connected"};
 	parser.yy = { parameval: function(t) {
 		//console.log("Param: " + t + " Value: " + paramvalue[t])
 		return paramvalue[t];
