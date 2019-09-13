@@ -216,8 +216,8 @@ class PxrXmlArgsComponent extends Rete.Component {
 			var VstructMember = PxrParams[i].getAttribute("vstructmember");
 			var WidgetMember = PxrParams[i].getAttribute("widget");
 			
-			if (VstructMember) {
-				continue; //ignore input nodes which are part of vstructs
+			if (VstructMember && WidgetMember == "null") {
+				continue; //ignore input nodes which are part of vstructs AND where widget == null
 			}
 			
 			var patternType = PxrParams[i].getAttribute("type").replace( /\s/g, '')
