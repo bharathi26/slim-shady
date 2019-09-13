@@ -268,7 +268,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 			var defaultVal = PxrParams[i].getAttribute("default")
 			
 			if (WidgetMember == "null") {
-				var PatternInputs = new Rete.Input(patternType + " " + PxrParams[i].getAttribute("name"), "(-) " + patternType + " " + PxrParams[i].getAttribute("name"), usedSocket, false);
+				var PatternInputs = new Rete.Input(patternType + " " + PxrParams[i].getAttribute("name"), "! " + patternType + " " + PxrParams[i].getAttribute("name"), usedSocket, false);
 				
 				var usedControl
 				if (defaultVal != ""){
