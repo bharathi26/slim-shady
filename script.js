@@ -101,43 +101,43 @@ var VueFloatControl = {
   }
 }
 
-class NumControl extends Rete.Control {
-
-  constructor(emitter, key, readonly, defaultVal) {
-    super(key);
-    this.component = VueNumControl;
-    this.props = { emitter, ikey: key, readonly, defaultVal};
-  }
-
-  setValue(val) {
-    this.vueContext.value = val;
+var VueHiddenControl = {
+  props: ['readonly', 'defaultVal', 'emitter', 'ikey', 'getData', 'putData'],
+  template: '<input type="hidden" step="0.01" :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop=""/>',
+  data() {
+    return {
+      value: 0,
+    }
+  },
+  methods: {
+    change(e){
+      this.value = e.target.value;
+      this.update();
+    },
+    update() {
+      if (this.ikey)
+        this.putData(this.ikey, this.value)
+      this.emitter.trigger('process');
+    }
+  },
+  mounted() {
+    this.value = this.getData(this.ikey);
+	let val = this.getData(this.ikey);
+	this.value =  val === undefined ? this.defaultVal : val;
+	this.update();
   }
 }
 
-class IntControl extends Rete.Control {
+class PxrControl extends Rete.Control {
+	constructor(emitter, key, readonly, vueComponent, defaultVal) {
+		super(key);
+		this.component = vueComponent;
+		this.props = { emitter, ikey: key, readonly, defaultVal};
+	}
 
-  constructor(emitter, key, readonly, defaultVal) {
-    super(key);
-    this.component = VueIntControl;
-    this.props = { emitter, ikey: key, readonly, defaultVal};
-  }
-
-  setValue(val) {
-    this.vueContext.value = val;
-  }
-}
-
-class FloatControl extends Rete.Control {
-
-  constructor(emitter, key, readonly, defaultVal) {
-    super(key);
-    this.component = VueFloatControl;
-    this.props = { emitter, ikey: key, readonly, defaultVal};
-  }
-
-  setValue(val) {
-    this.vueContext.value = val;
-  }
+	setValue(val) {
+		this.vueContext.value = val;
+	}
 }
 
 var CustomPxrXmlArgsSocket = {
@@ -272,38 +272,10 @@ class PxrXmlArgsComponent extends Rete.Component {
 				
 				var usedControl
 				if (defaultVal != ""){
-					
-					switch (patternType) {
-						case "color":
-							usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
-							break;
-						case "float":
-							usedControl = new FloatControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
-							break;
-						case "int":
-							usedControl = new IntControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
-							break;
-						case "normal":
-							usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
-							break;
-						case "point":
-							usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
-							break;
-						case "string":
-							usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
-							break;
-						case "struct":
-							usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
-							break;
-						case "vector":
-							usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
-							break;
-						default:
-							usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, defaultVal)
-					}
+					usedControl = new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, VueHiddenControl, defaultVal)
 				}
 				else {
-					usedControl = new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true)
+					usedControl = new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), true, VueHiddenControl)
 				}
 				PatternInputs.addControl(usedControl); // User disallowed to edit Widget "Null" items 
 			}
@@ -314,31 +286,31 @@ class PxrXmlArgsComponent extends Rete.Component {
 					
 					switch (patternType) {
 						case "color":
-							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueNumControl, defaultVal));
 							break;
 						case "float":
-							PatternInputs.addControl(new FloatControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueFloatControl, defaultVal));
 							break;
 						case "int":
-							PatternInputs.addControl(new IntControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueIntControl, defaultVal));
 							break;
 						case "normal":
-							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueNumControl, defaultVal));
 							break;
 						case "point":
-							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueNumControl, defaultVal));
 							break;
 						case "string":
-							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueNumControl, defaultVal));
 							break;
 						case "struct":
-							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueNumControl, defaultVal));
 							break;
 						case "vector":
-							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueNumControl, defaultVal));
 							break;
 						default:
-							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, defaultVal));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueNumControl, defaultVal));
 					}
 				}
 				
@@ -346,31 +318,31 @@ class PxrXmlArgsComponent extends Rete.Component {
 					
 					switch (patternType) {
 						case "color":
-							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueNumControl));
 							break;
 						case "float":
-							PatternInputs.addControl(new FloatControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueFloatControl));
 							break;
 						case "int":
-							PatternInputs.addControl(new IntControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueIntControl));
 							break;
 						case "normal":
-							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueNumControl));
 							break;
 						case "point":
-							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueNumControl));
 							break;
 						case "string":
-							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueNumControl));
 							break;
 						case "struct":
-							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueNumControl));
 							break;
 						case "vector":
-							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueNumControl));
 							break;
 						default:
-							PatternInputs.addControl(new NumControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false));
+							PatternInputs.addControl(new PxrControl(this.editor, patternType + " " + PxrParams[i].getAttribute("name"), false, VueNumControl));
 					}
 				}
 			}
