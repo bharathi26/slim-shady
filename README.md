@@ -9,8 +9,8 @@ A web-based material node editor for RenderMan. It is based on Rete.js (https://
 
 ## How To / Explanation
 
-* Upper left button to export rib text file
-* Right click mouse button to open menu for adding further nodes
+* Upper left buttons to save, export, reset (clear the working pane) and export rib text file
+* Right click mouse button to open menu for adding further nodes or to delete a node
 * A connection has priority over a maintained value
 
 ## Requirements
