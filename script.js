@@ -653,7 +653,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 	};
 	
 	
-	document.getElementById('file-input').onchange = async ()=> {
+	document.getElementById("file-input").onchange = async ()=> {
 
 		var file = self.document.getElementById('file-input').files[0];
 		
@@ -685,6 +685,13 @@ class PxrXmlArgsComponent extends Rete.Component {
 		
 	};
 	
+	
+	document.getElementById("reset-input").onclick = async ()=> {
+		while (editor.nodes.length){ // delete all nodes
+			var nodeInstance = editor.nodes[0];
+			editor.removeNode(nodeInstance)
+		}		
+	};
 	
 	var PxrWireframe = await components[59].createNode({ 
 	"color wireColor": "0 0 0",
