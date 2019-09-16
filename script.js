@@ -661,17 +661,19 @@ class PxrXmlArgsComponent extends Rete.Component {
 		var reader = new FileReader();
 		reader.onload = async function(e) {
 			let LoadEditorObj = JSON.parse(e.target.result);
-			for (i in LoadEditorObj.nodes){
-				console.log(LoadEditorObj.nodes[i]);
-				var nodeId= PxrXmlArgsList.indexOf(LoadEditorObj.nodes[i].name);
-				//console.log(nodeId);
-				//console.log(components[nodeId]);
-				var PxrNode = await components[nodeId].createNode(LoadEditorObj.nodes[i].data);
-				var nodePosX = LoadEditorObj.nodes[i].position[0]
-				var nodePosY = LoadEditorObj.nodes[i].position[1]
-				PxrNode.position = [nodePosX, nodePosY];
-				editor.addNode(PxrNode);
-			}
+			await editor.fromJSON(LoadEditorObj);
+			//for (i in LoadEditorObj.nodes){
+			//	console.log(LoadEditorObj.nodes[i]);
+			//	var nodeId= PxrXmlArgsList.indexOf(LoadEditorObj.nodes[i].name);
+			//	//console.log(nodeId);
+			//	//console.log(components[nodeId]);
+			//	var PxrNode = await components[nodeId].createNode(LoadEditorObj.nodes[i].data);
+			//	var nodePosX = LoadEditorObj.nodes[i].position[0]
+			//	var nodePosY = LoadEditorObj.nodes[i].position[1]
+			//	PxrNode.position = [nodePosX, nodePosY];
+			//	editor.addNode(PxrNode);
+			//}
+			
 		
 		};
 		reader.readAsText(file);
