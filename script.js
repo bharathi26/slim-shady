@@ -268,7 +268,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 			var defaultVal = PxrParams[i].getAttribute("default")
 			
 			if (WidgetMember == "null") {
-				var PatternInputs = new Rete.Input(patternType + " " + PxrParams[i].getAttribute("name"), "! " + patternType + " " + PxrParams[i].getAttribute("name"), usedSocket, false);
+				var PatternInputs = new Rete.Input(patternType + " " + PxrParams[i].getAttribute("name"), "- " + patternType + " " + PxrParams[i].getAttribute("name"), usedSocket, false);
 				
 				var usedControl
 				if (defaultVal != ""){
@@ -654,16 +654,33 @@ class PxrXmlArgsComponent extends Rete.Component {
 	
 	
 	document.getElementById('file-input').onchange = async ()=> {
+
 		var file = self.document.getElementById('file-input').files[0];
+		
 		if (!file) {return;}
 		var reader = new FileReader();
-		reader.onload = function(e) {
-			var contents = e.target.result;
-			console.log(contents); // Display file content
-			
-			//editor.fromJSON(contents);
+		reader.onload = async function(e) {
+			let LoadEditorObj = JSON.parse(e.target.result);
+			for (i in LoadEditorObj.nodes){
+				console.log(LoadEditorObj.nodes[i]);
+				var nodeId= PxrXmlArgsList.indexOf(LoadEditorObj.nodes[i].name);
+				//console.log(nodeId);
+				//console.log(components[nodeId]);
+				var PxrNode = await components[nodeId].createNode(LoadEditorObj.nodes[i].data);
+				var nodePosX = LoadEditorObj.nodes[i].position[0]
+				var nodePosY = LoadEditorObj.nodes[i].position[1]
+				PxrNode.position = [nodePosX, nodePosY];
+				editor.addNode(PxrNode);
+			}
+		
 		};
 		reader.readAsText(file);
+		
+		while (editor.nodes.length){ // delete all nodes
+			var nodeInstance = editor.nodes[0];
+			editor.removeNode(nodeInstance)
+		}
+		
 	};
 	
 	
@@ -788,6 +805,24 @@ class PxrXmlArgsComponent extends Rete.Component {
     editor.view.resize();
     editor.trigger('process');
 })();
+
+
+
+const readUploadedFileAsText = (inputFile) => {
+  const temporaryFileReader = new FileReader();
+
+  return new Promise((resolve, reject) => {
+    temporaryFileReader.onerror = () => {
+      temporaryFileReader.abort();
+      reject(new DOMException("Problem parsing input file."));
+    };
+
+    temporaryFileReader.onload = () => {
+      resolve(temporaryFileReader.result);
+    };
+    temporaryFileReader.readAsText(inputFile);
+  });
+};
 
 
 // converts XML to JSON
