@@ -645,7 +645,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 	};
 	
 	
-	document.getElementById("save_link").onclick = async ()=> {
+	document.getElementById('save_link').onclick = async ()=> {
 		const savedata = JSON.stringify(editor.toJSON());
 		var data = new Blob([savedata], {type: 'text/plain'});
 		var url = window.URL.createObjectURL(data);
@@ -653,8 +653,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 	};
 	
 	
-	document.getElementById("file-input").onchange = async ()=> {
-
+	document.getElementById('file-input').onchange = async ()=> {
 		var file = self.document.getElementById('file-input').files[0];
 		
 		if (!file) {return;}
@@ -673,8 +672,6 @@ class PxrXmlArgsComponent extends Rete.Component {
 			//	PxrNode.position = [nodePosX, nodePosY];
 			//	editor.addNode(PxrNode);
 			//}
-			
-		
 		};
 		reader.readAsText(file);
 		
@@ -686,7 +683,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 	};
 	
 	
-	document.getElementById("reset-input").onclick = async ()=> {
+	document.getElementById('reset-input').onclick = async ()=> {
 		while (editor.nodes.length){ // delete all nodes
 			var nodeInstance = editor.nodes[0];
 			editor.removeNode(nodeInstance)
