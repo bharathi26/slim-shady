@@ -18,6 +18,7 @@ numSocket.combineWith(colorSocket);
 numSocket.combineWith(normalSocket);
 numSocket.combineWith(pointSocket);
 numSocket.combineWith(vectorSocket);
+numSocket.combineWith(structSocket);
 
 
 var VueNumControl = {
