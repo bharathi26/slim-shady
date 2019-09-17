@@ -697,6 +697,13 @@ class PxrXmlArgsComponent extends Rete.Component {
 	"float wireWidth": "2"
 	});
 	
+	var PxrWireframe1 = await components[59].createNode({ 
+	"color wireColor": "0 0 1",
+	"color backColor": "1 1 1",
+	"float wireOpacity": "1",
+	"float wireWidth": "2"
+	});
+	
 	var PxrWireLayer = await components[64].createNode({ 
 	});
 	
@@ -752,16 +759,18 @@ class PxrXmlArgsComponent extends Rete.Component {
 	//PxrCurvature.data["collapsed"] = true;
 	
 	PxrWireframe.position = [10, 40];
-	PxrWireLayer.position = [80, 300];
-	PxrExposure.position = [240, 30];
-	PxrColorCorrect.position = [610, 45];
-	PxrInvert.position = [950, 50];
-	PxrToFloat.position = [1300, 200];
-	PxrLayer1.position = [630, 700];
-	PxrLayerMixer.position = [1540, 270];
-	PxrLayerSurface.position = [1990, 70];
+	PxrWireframe1.position = [550, 700];
+	PxrWireLayer.position = [860, 350];
+	PxrExposure.position = [220, 40];
+	PxrColorCorrect.position = [535, 15];
+	PxrInvert.position = [880, 50];
+	PxrToFloat.position = [1300, 60];
+	PxrLayer1.position = [1205, 155];
+	PxrLayerMixer.position = [1550, 105];
+	PxrLayerSurface.position = [1850, 90];
 	
 	editor.addNode(PxrWireframe);
+	editor.addNode(PxrWireframe1);
 	editor.addNode(PxrWireLayer);
 	editor.addNode(PxrExposure);
 	editor.addNode(PxrColorCorrect);
@@ -773,7 +782,7 @@ class PxrXmlArgsComponent extends Rete.Component {
 	
 	
 	editor.connect(PxrWireframe.outputs.get("Cout"), PxrExposure.inputs.get("color inputRGB"));
-	editor.connect(PxrWireframe.outputs.get("Cout"), PxrWireLayer.inputs.get("color diffuseColor"));
+	editor.connect(PxrWireframe1.outputs.get("Cout"), PxrWireLayer.inputs.get("color diffuseColor"));
 	editor.connect(PxrExposure.outputs.get("resultRGB"), PxrColorCorrect.inputs.get("color inputRGB"));
 	editor.connect(PxrColorCorrect.outputs.get("resultRGB"), PxrInvert.inputs.get("color inputRGB"));
 	editor.connect(PxrInvert.outputs.get("resultRGB"), PxrToFloat.inputs.get("color input"));
